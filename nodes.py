@@ -1,4 +1,6 @@
 import random,math
+import numpy as np 
+import matplotlib.pyplot as plt
 
 class Node:
     def __init__(self, id, tp, dem, xx, yy):
@@ -12,6 +14,7 @@ service_locations = []
 depot = Node(0, 0, 0, 50, 50)
 all_nodes.append(depot)
 random.seed(1)
+plt.scatter(50,50,s=60,alpha=1)
 for i in range(0, 200):
     id = i + 1
     tp = random.randint(1,3)
@@ -22,7 +25,13 @@ for i in range(0, 200):
     all_nodes.append(serv_node)
     service_locations.append(serv_node)
 
-
+ # plotting nodes 
+    print(xx,yy)
+    N = 50
+    area=30
+    plt.scatter(xx,yy,s=area,alpha=0.5)
+plt.show()
+#end of plotting nodes 
 
 dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
 for i in range(0, len(all_nodes)):
