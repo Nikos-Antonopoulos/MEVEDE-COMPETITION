@@ -30,9 +30,11 @@ for i in range(0, 200):
     N = 50
     area=30
     plt.scatter(xx,yy,s=area,alpha=0.5)
+
+
+plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
 #end of plotting nodes 
-
 dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
 for i in range(0, len(all_nodes)):
     for j in range(0, len(all_nodes)):
