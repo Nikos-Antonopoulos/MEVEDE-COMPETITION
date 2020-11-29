@@ -44,3 +44,20 @@ for i in range(0, len(all_nodes)):
         dy_2 = (source.y - target.y) ** 2
         dist = round(math.sqrt(dx_2 + dy_2))
         dist_matrix[i][j] = dist 
+
+# 1st way for ultra flexing :
+adjusted_dist_matrix = [[0.0 if i == j else (dist_matrix[i][j]/35)*60+5 if all_nodes[j].type == 1 else (dist_matrix[i][j]/35)*60+15 if all_nodes[j].type == 2 else (dist_matrix[i][j]/35)*60+25 for j in range(0, len(dist_matrix[i]))] for i in range(0, len(dist_matrix))]
+
+# 2nd way minimalistic :
+adjusted_dist_matrix = []
+for i in range(0, len(dist_matrix)):
+    adjusted_dist_matrix.append([])
+    for j in range(0, len(dist_matrix[i])):
+        if i == j:
+            adjusted_dist_matrix[i].append(0.0)
+        elif all_nodes[j].type == 1:
+            adjusted_dist_matrix[i].append((dist_matrix[i][j] / 35) * 60 + 5)
+        elif all_nodes[j].type == 2:
+            adjusted_dist_matrix[i].append((dist_matrix[i][j] / 35) * 60 + 15)
+        else:
+            adjusted_dist_matrix[i].append((dist_matrix[i][j] / 35) * 60 + 25)
