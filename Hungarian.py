@@ -1,4 +1,4 @@
-# ΕΧΕΙ ERRORS ΓΙΑΤΙ ΠΡΕΠΕΙ ΝΑ ΒΑΛΕΙΣ ΤΟ ΔΙΚΟ ΣΟΥ ΠΙΝΑΚΑ ΚΟΣΤΟΥΣ (ΟΠΟΥ ΔΕΙΣ ASSIGNMENT)
+# ΕΧΕΙ ERRORS ΓΙΑΤΙ ΠΡΕΠΕΙ ΝΑ ΒΑΛΕΙΣ ΤΟ ΔΙΚΟ ΣΟΥ ΠΙΝΑΚΑ ΚΟΣΤΟΥΣ (ΟΠΟΥ ΔΕΙΣ ASSIGNMENT KAI costs)
 
 from collections import deque
 import sys , argparse
