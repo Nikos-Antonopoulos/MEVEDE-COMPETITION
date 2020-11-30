@@ -46,13 +46,13 @@ for i in range(0, len(all_nodes)):
         dist_matrix[i][j] = dist 
 
 # 1st way for ultra flexing :
-minutes_dist_matrix = [[0.0 if i == j else (dist_matrix[i][j] / 35 * 60 + 5) if all_nodes[j].type == 1 else (dist_matrix[i][j] / 35 * 60 + 15) if all_nodes[j].type == 2 else (dist_matrix[i][j] / 35 * 60 + 25) if all_nodes[j].type == 3 else (dist_matrix[i][j] / 35 * 60) for j in range(0, len(dist_matrix[i]))] for i in range(0, len(dist_matrix))]
+minutes_dist_matrix = [[0.0 if i == j else (dist_matrix[i][j] / 35 * 60 + 5) if all_nodes[j].type == 1 else (dist_matrix[i][j] / 35 * 60 + 15) if all_nodes[j].type == 2 else (dist_matrix[i][j] / 35 * 60 + 25) if all_nodes[j].type == 3 else (dist_matrix[i][j] / 35 * 60) for j in range(len(dist_matrix[i]))] for i in range(len(dist_matrix))]
 
 # 2nd way minimalistic :
 minutes_dist_matrix = []
-for i in range(0, len(dist_matrix)):
+for i in range(len(dist_matrix)):
     minutes_dist_matrix.append([])
-    for j in range(0, len(dist_matrix[i])):
+    for j in range(len(dist_matrix[i])):
         if i == j:
             minutes_dist_matrix[i].append(0.0)
         elif all_nodes[j].type == 1:
