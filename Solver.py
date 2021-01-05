@@ -5,6 +5,20 @@ class Solution:
     def __init__(self): #sider
         self.maxCostOfRoute = 0.0
         self.routes = []
+    
+    def CalculateMaxCostOfRoute(self,model):#asking for solver to get the matrix
+        maxCostOfRoutes = 0
+        for i in range (0, len(self.routes)):#for every route in the specific solution
+            rt = self.routes[i] 
+            costOfCurrentRoute = 0
+            for j in range (0, len(rt.sequenceOfNodes) - 1):
+                a = rt.sequenceOfNodes[j] 
+                b = rt.sequenceOfNodes[j + 1]
+                costOfCurrentRoute += model.distanceMatrix[a.ID][b.ID]   
+            if(costOfCurrentRoute > maxCostOfRoute):
+                maxCostOfRoutes=costOfCurrentRoute
+        return maxCostOfRoutes
+        
 
 class RelocationMove(object):
     def __init__(self):
@@ -78,10 +92,10 @@ class TwoOptMove(object):
 
 class Solver:
     def __init__(self, m):
-        self.allNodes = m.allNodes
-        self.customers = m.customers
-        self.depot = m.allNodes[0]
-        self.distanceMatrix = m.matrix
+        self.allNodes = m.all_nodes
+        self.customers = m.service_locations
+        self.depot = m.all_nodes[0]
+        self.distanceMatrix = m.time_matrix
         self.capacity = m.capacity
         self.sol = None
         self.bestSolution = None
@@ -490,15 +504,15 @@ class Solver:
         sm.costChangeSecondRt = costChangeSecondRoute
         sm.moveCost = moveCost
 
-    def CalculateTotalCost(self, sol):
+    def CalculateTotalCost(self, sol):#Antonopoulos
         c = 0
-        for i in range (0, len(sol.routes)):
-            rt = sol.routes[i]
-            for j in range (0, len(rt.sequenceOfNodes) - 1):
-                a = rt.sequenceOfNodes[j]
+        for i in range (0, len(sol.routes)):#for every route in the specific solution
+            rt = sol.routes[i] 
+            for j in range (0, len(rt.sequenceOfNodes) - 1):#goes back to base as well
+                a = rt.sequenceOfNodes[j] 
                 b = rt.sequenceOfNodes[j + 1]
-                c += self.distanceMatrix[a.ID][b.ID]
-        return c
+                c += self.distanceMatrix[a.ID][b.ID] #adding cost from current node to the next node. 
+        return c #returns the cost of the object:sol that belongs to class:Solution
 
     def InitializeOperators(self, rm, sm, top):
         rm.Initialize()
