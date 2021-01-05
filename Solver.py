@@ -114,23 +114,27 @@ class Solver:
         for i in range(0, len(self.customers)):
             self.customers[i].isRouted = False
 
-    def ApplyNearestNeighborMethod(self):
+    def ApplyNearestNeighborMethod(self): #spy
         modelIsFeasible = True
         self.sol = Solution()
         insertions = 0
 
-        while (insertions < len(self.customers)):
-            bestInsertion = CustomerInsertion()
-            lastOpenRoute: Route = self.GetLastOpenRoute()
+        while (insertions < len(self.customers)): #while there are still not visited nodes
+            bestInsertion = CustomerInsertion() #CustomerInsertion defines an insertion (customer, route, cost)
+            lastOpenRoute: Route = self.GetLastOpenRoute()  #returns the last open route (if it exists)
+                                                            #which is the route in the last position
+                                                            # of the matrix routes ( routes[-1] )
 
             if lastOpenRoute is not None:
-                self.IdentifyBestInsertion(bestInsertion, lastOpenRoute)
+                self.IdentifyBestInsertion(bestInsertion, lastOpenRoute) #sets as bestInsertion the node (from the not routed nodes)
+                                                                         #which is the nearest neighbor to the last
+                                                                         #node in the examining route
 
-            if (bestInsertion.customer is not None):
+            if (bestInsertion.customer is not None): #applies best insertion and modifies cost and load respectively
                 self.ApplyCustomerInsertion(bestInsertion)
                 insertions += 1
             else:
-                #If there is an empty available route
+                 #if there is an empty available route
                 if lastOpenRoute is not None and len(lastOpenRoute.sequenceOfNodes) == 2:
                     modelIsFeasible = False
                     break
