@@ -4,49 +4,65 @@ import math
 
 class Model:
 
-# instance variables
     def __init__(self):
-        self.allNodes = []
-        self.customers = []
-        self.matrix = []
-        self.capacity = -1
+        self.all_nodes = []  # All the nodes that are included in the model plus the depot
+        self.service_locations = []  # All the locations that have to be served
+        self.time_matrix = []  # Time Matrix created from the distance matrix and the node type.
+        self.capacity = 3000  # Capacity of the Vehicles measured in kg (3tn).
 
     def BuildModel(self):
+        depot = Node(0, 0, 0, 50, 50)
+        self.all_nodes.append(depot)
         random.seed(1)
-        depot = Node(0, 50, 50, 0)
-        self.allNodes.append(depot)
-        self.capacity = 50
-        totalCustomers = 100
-        for i in range (0, totalCustomers):
-            x = random.randint(0, 100)
-            y = random.randint(0, 100)
-            dem = random.randint(1, 4)
-            cust = Node(i + 1, x, y, dem)
-            self.allNodes.append(cust)
-            self.customers.append(cust)
+        number_of_service_points = 200
 
-        rows = len(self.allNodes)
-        self.matrix = [[0.0 for x in range(rows)] for y in range(rows)]
+        for i in range(0, number_of_service_points):  # Creation of the service locations
+            id = i + 1
+            tp = random.randint(1, 3)
+            dem = random.randint(1, 5) * 100
+            xx = random.randint(0, 100)
+            yy = random.randint(0, 100)
+            serv_node = Node(id, tp, dem, xx, yy)
+            self.all_nodes.append(serv_node)
+            self.service_locations.append(serv_node)
 
-        for i in range(0, len(self.allNodes)):
-            for j in range(0, len(self.allNodes)):
-                a = self.allNodes[i]
-                b = self.allNodes[j]
-                dist = math.sqrt(math.pow(a.x - b.x, 2) + math.pow(a.y - b.y, 2))
-                self.matrix[i][j] = dist
+        dist_matrix = [[0.0 for j in range(0, len(self.all_nodes))] for k in range(0, len(self.all_nodes))]  
+        for i in range(0, len(self.all_nodes)):  # Creation of the distance matrix
+            for j in range(0, len(self.all_nodes)):
+                source = self.all_nodes[i]
+                target = self.all_nodes[j]
+                dx_2 = (source.x - target.x) ** 2
+                dy_2 = (source.y - target.y) ** 2
+                dist = round(math.sqrt(dx_2 + dy_2))
+                dist_matrix[i][j] = dist
+
+        for i in range(len(dist_matrix)):  # Creation of the time_matrix
+            self.time_matrix.append([])
+            for j in range(len(dist_matrix[i])):
+                if i == j:
+                    self.time_matrix[i].append(0.0)
+                elif self.all_nodes[j].type == 1:
+                    self.time_matrix[i].append(dist_matrix[i][j] / 35 * 60 + 5)
+                elif self.all_nodes[j].type == 2:
+                    self.time_matrix[i].append(dist_matrix[i][j] / 35 * 60 + 15)
+                elif self.all_nodes[j].type == 3:
+                    self.time_matrix[i].append(dist_matrix[i][j] / 35 * 60 + 25)
+                else:
+                    self.time_matrix[i].append(dist_matrix[i][j] / 35 * 60)
+
 
 class Node:
-    def __init__(self, idd, xx, yy, dem):
+    def __init__(self, id, tp, dem, xx, yy):
+        self.id = id
+        self.type = tp  # The node can be type 1 (5 min) type 2 (15 min) type 3 (25min)
+        self.demand = dem
         self.x = xx
         self.y = yy
-        self.ID = idd
-        self.demand = dem
-        self.isRouted = False
+
 
 class Route:
-    def __init__(self, dp, cap):
+    def __init__(self, dp, cap):  # One route, a node that's the depot, and the capacity
         self.sequenceOfNodes = []
-        self.sequenceOfNodes.append(dp)
         self.sequenceOfNodes.append(dp)
         self.cost = 0
         self.capacity = cap
