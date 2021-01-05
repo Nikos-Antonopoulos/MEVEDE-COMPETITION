@@ -2,8 +2,8 @@ from VRP_Model import *
 from SolutionDrawer import *
 
 class Solution:
-    def __init__(self):
-        self.cost = 0.0
+    def __init__(self): #sider
+        self.maxCostOfRoute = 0.0
         self.routes = []
 
 class RelocationMove(object):
@@ -128,30 +128,36 @@ class Solver:
             print('FeasibilityIssue')
             #reportSolution
 
-    def MinimumInsertions(self):
+    def MinimumInsertions(self): # sider
         modelIsFeasible = True
         self.sol = Solution()
         insertions = 0
 
-        while (insertions < len(self.customers)):
+        while (insertions < len(self.customers)): # while there are customers that are not inserted
             bestInsertion = CustomerInsertionAllPositions()
-            lastOpenRoute: Route = self.GetLastOpenRoute()
+            lastOpenRoute: Route = self.GetLastOpenRoute() # the last route of the current solution
+                                                           # when a new route opens all the previous ones are closed
+                                                           # that's why we are using the last route, which is the only open
 
-            if lastOpenRoute is not None:
-                self.IdentifyBestInsertionAllPositions(bestInsertion, lastOpenRoute)
+            if lastOpenRoute is not None: # it means that there is at least one route opened
+                self.IdentifyBestInsertionAllPositions(bestInsertion, lastOpenRoute)  # the best insertion will be saved in the object bestInsertion
 
-            if (bestInsertion.customer is not None):
-                self.ApplyCustomerInsertionAllPositions(bestInsertion)
+            if (bestInsertion.customer is not None): # if a best insertion was found
+                self.ApplyCustomerInsertionAllPositions(bestInsertion) # insertion gets added to self.sol
                 insertions += 1
             else:
                 # If there is an empty available route
-                if lastOpenRoute is not None and len(lastOpenRoute.sequenceOfNodes) == 2:
+                if lastOpenRoute is not None and len(lastOpenRoute.sequenceOfNodes) == 2: # len(lastOpenRoute.sequenceOfNodes) == 2 means that in the route
+                                                                                          # there are only the two dp (starting and ending point) items of initialization,
+                                                                                          # so the load is 0 and if bestInsertion.customer is None means that there is at
+                                                                                          # least one customer with demand bigger than the capacity of the route, so the model
+                                                                                          # is not feasible
                     modelIsFeasible = False
                     break
-                # If there is no empty available route and no feasible insertion was identified
+                # If there is no empty available route and no feasible insertion was identified, which means that there is no available customer that can be added in lastOpenRoute
                 else:
-                    rt = Route(self.depot, self.capacity)
-                    self.sol.routes.append(rt)
+                    rt = Route(self.depot, self.capacity) # a new route gets opened
+                    self.sol.routes.append(rt) # the new route gets added to the solution
 
         if (modelIsFeasible == False):
             print('FeasibilityIssue')
@@ -612,7 +618,10 @@ class Solver:
         rt.load = tl
         rt.cost = tc
 
-    def TestSolution(self):
+    def TestSolution(self): # sider
+        # TO BE UPDATED ACCORDING TO MIN MAX PROBLEM
+        if (len(self.sol.routes) > 25): # if the solution used more routes than the routes available
+            print("Routes' number problem.")
         totalSolCost = 0
         for r in range (0, len(self.sol.routes)):
             rt: Route = self.sol.routes[r]
@@ -633,33 +642,44 @@ class Solver:
         if abs(totalSolCost - self.sol.cost) > 0.0001:
             print('Solution Cost problem')
 
-    def IdentifyBestInsertionAllPositions(self, bestInsertion, rt):
-        for i in range(0, len(self.customers)):
-            candidateCust: Node = self.customers[i]
-            if candidateCust.isRouted is False:
+    def IdentifyBestInsertionAllPositions(self, bestInsertion, rt): #sider
+        # bestInsertion: type of CustomerInsertionAllPositions rt: type of Route
+        # the method finds the best insertion for a given route and assigns it to bestInsertion parameter (it is an Object so there is no need to return)
+        for i in range(0, len(self.customers)): # iterate all the customers, i is the index of the checking customer in self.customers
+            candidateCust: Node = self.customers[i] # the checking customer
+            if candidateCust.isRouted is False: # if the current customer being checked is not inserted
+                                                # in a route of the solution
                 if rt.load + candidateCust.demand <= rt.capacity:
                     lastNodePresentInTheRoute = rt.sequenceOfNodes[-2]
-                    for j in range(0, len(rt.sequenceOfNodes) - 1):
+                    for j in range(0, len(rt.sequenceOfNodes) - 1): # j is the index of a node in rt(parameter).sequenceOfNodes
+                                                                    # it will be checked if the insertion of candidateCust between
+                                                                    # rt.sequenceOfNodes[j] and rt.sequenceOfNodes[j+1] costs less
+                                                                    # than the current best insertion
                         A = rt.sequenceOfNodes[j]
                         B = rt.sequenceOfNodes[j + 1]
-                        costAdded = self.distanceMatrix[A.ID][candidateCust.ID] + self.distanceMatrix[candidateCust.ID][B.ID]
-                        costRemoved = self.distanceMatrix[A.ID][B.ID]
-                        trialCost = costAdded - costRemoved
+                        costAdded = self.distanceMatrix[A.ID][candidateCust.ID] + self.distanceMatrix[candidateCust.ID][B.ID] # the costs of the 2 new connections created
+                        costRemoved = self.distanceMatrix[A.ID][B.ID] # the cost of the connection that broke (it will be reduced from the trialCost)
+                        trialCost = costAdded - costRemoved # how the cost changed after the insertion
 
-                        if trialCost < bestInsertion.cost:
+                        if trialCost < bestInsertion.cost: # bestInsertion.cost is initialized to 10 ** 9
+                            # the fields of bestInsertion will be updated according to the new best insertion found
                             bestInsertion.customer = candidateCust
                             bestInsertion.route = rt
                             bestInsertion.cost = trialCost
-                            bestInsertion.insertionPosition = j
+                            bestInsertion.insertionPosition = j # the position after which the bestInsertion.customer will be inserted
 
-    def ApplyCustomerInsertionAllPositions(self, insertion):
+    def ApplyCustomerInsertionAllPositions(self, insertion): #sider
+        # insertion: type of CustomerInsertionAllPositions
+        # the new insetion will be added to the current solution
         insCustomer = insertion.customer
         rt = insertion.route
         # before the second depot occurrence
         insIndex = insertion.insertionPosition
-        rt.sequenceOfNodes.insert(insIndex + 1, insCustomer)
-        rt.cost += insertion.cost
-        self.sol.cost += insertion.cost
-        rt.load += insCustomer.demand
-        insCustomer.isRouted = True
+        rt.sequenceOfNodes.insert(insIndex + 1, insCustomer) # insCustomer gets inserted after the rt.sequenceOfNodes[indIndex]
+        rt.cost += insertion.cost # route's cost gets updated
+        if (rt.cost > self.sol.maxCostOfRoute): # if the new cost of the route is bigger than the maxCostOfRoute of the solution,
+                                                # self.sol.maxCostOfRoute gets updated to the rt.cost
+            self.sol.maxCostOfRoute = rt.cost
+        rt.load += insCustomer.demand # route's cost gets updated
+        insCustomer.isRouted = True # inserted customer marked as routed
 
