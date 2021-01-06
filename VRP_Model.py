@@ -14,7 +14,7 @@ class Model:
         depot = Node(0, 0, 0, 50, 50)
         self.all_nodes.append(depot)
         random.seed(1)
-        number_of_service_points = 5
+        number_of_service_points = 200
 
         for i in range(0, number_of_service_points):  # Creation of the service locations
             id = i + 1
