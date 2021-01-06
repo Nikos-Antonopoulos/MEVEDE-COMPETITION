@@ -64,9 +64,9 @@ class Model:
                             bonus_time = 15/2
                         elif source.type == 3:
                             bonus_time = 25/2
-                    time = dist / 35 * 60 + bonus_time
+                    time = dist / 35 + bonus_time / 60
                     if j == 0:  # If a route is returning to the depot the only extra cost is the bonus_time cost
-                        self.time_matrix[i][j] = bonus_time
+                        self.time_matrix[i][j] = bonus_time / 60
                     else:
                         self.time_matrix[i][j] = time
     
