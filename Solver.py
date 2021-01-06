@@ -6,7 +6,7 @@ class Solution:
         self.maxCostOfRoute = 0.0
         self.routes = []
     
-    def CalculateMaxCostOfRoute(self,model):#asking for solver to get the matrix
+    def CalculateMaxCostOfRoute(self,model):#asking for model to get the matrix
         maxCostOfRoutes = 0
         for i in range (0, len(self.routes)):#for every route in the specific solution
             rt = self.routes[i] 
@@ -103,7 +103,7 @@ class Solver:
 
     def solve(self):
         self.SetRoutedFlagToFalseForAllCustomers()
-        #self.ApplyNearestNeighborMethod()
+        self.ApplyNearestNeighborMethod()
         self.MinimumInsertions()
         self.ReportSolution(self.sol)
         self.VND()
