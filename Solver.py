@@ -22,8 +22,9 @@ class Solution:
         # same as above but using built in methods
         routes_costs = [0.0] * len(self.routes)
         for i in range(len(self.routes)):
-            routes_costs[i] = sum(time_matrix[self.routes[i][j]][self.routes[i][j + 1]] for j in range(len(self.routes[i]) - 1))
-        return max(routes_costs)
+            routes_costs[i] = sum(time_matrix[self.routes[i][j]][self.routes[i][j + 1]]
+                                  for j in range(len(self.routes[i]) - 1)) # finds the cost of each route
+        return max(routes_costs) # returns the max cost of routes
 
 
 class RelocationMove(object):
