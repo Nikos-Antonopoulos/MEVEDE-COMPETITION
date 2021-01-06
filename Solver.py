@@ -20,7 +20,7 @@ class Solution:
         #return max_cost_of_routes
 
         # same as above but using built in methods
-        routes_costs = [0.0] * len(routes)
+        routes_costs = [0.0] * len(self.routes)
         for i in range(len(self.routes)):
             routes_costs[i] = sum(time_matrix[self.routes[i][j]][self.routes[i][j + 1]] for j in range(len(self.routes[i]) - 1))
         return max(routes_costs)
