@@ -7,17 +7,18 @@ class Solution:
         self.routes = []
     
     def CalculateMaxCostOfRoute(self,model):#asking for model to get the matrix
-        max_cost_of_routes = 0
-        for i in range (0, len(self.routes)):#for every route in the specific solution
-            rt = self.routes[i] 
-            cost_of_current_route = 0
-            for j in range (0, len(rt.sequenceOfNodes) -1 ):
-                a = rt.sequenceOfNodes[j] 
-                b = rt.sequenceOfNodes[j + 1]
-                cost_of_current_route += model.distanceMatrix[a.ID][b.ID]   
-            if(cost_of_current_route > max_cost_of_routes):
-                max_cost_of_routes=cost_of_current_route
-        return max_cost_of_routes
+        # max_cost_of_routes = 0
+        # for i in range (0, len(self.routes)):#for every route in the specific solution
+        #     rt = self.routes[i]
+        #     cost_of_current_route = 0
+        #     for j in range (0, len(rt.sequenceOfNodes) -1 ):
+        #         a = rt.sequenceOfNodes[j]
+        #         b = rt.sequenceOfNodes[j + 1]
+        #         cost_of_current_route += model.distanceMatrix[a.ID][b.ID]
+        #     if(cost_of_current_route > max_cost_of_routes):
+        #         max_cost_of_routes=cost_of_current_route
+        #return max_cost_of_routes
+        return max(sum(self.routes[i] + self.routes[i + 1] for i in range(0, len(self.routes) - 1))) # same as above in one line
         
 
 class RelocationMove(object):
