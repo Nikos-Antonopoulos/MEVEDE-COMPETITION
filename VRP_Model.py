@@ -82,18 +82,23 @@ class Model:
         return routes
 
     def CalculateMaxCostOfRoute(self, routes, time_matrix):  # asking for model to get the matrix
-        print(time_matrix[1][200])
-        max_cost_of_routes = 0
-        for i in range(0, len(routes)):  # for every route in the specific solution
-            list_i = routes[i]
-            cost_of_current_route = 0
-            for j in range(0, len(list_i) - 1):
-                a = list_i[j]
-                b = list_i[j + 1]
-                cost_of_current_route += time_matrix[a][b]
-            if (cost_of_current_route > max_cost_of_routes):
-                max_cost_of_routes = cost_of_current_route
-        return max_cost_of_routes
+        # max_cost_of_routes = 0
+        # for i in range(0, len(routes)):  # for every route in the specific solution
+        #     list_i = routes[i]
+        #     cost_of_current_route = 0
+        #     for j in range(0, len(list_i) - 1):
+        #         a = list_i[j]
+        #         b = list_i[j + 1]
+        #         cost_of_current_route += time_matrix[a][b]
+        #     if (cost_of_current_route > max_cost_of_routes):
+        #         max_cost_of_routes = cost_of_current_route
+        # return max_cost_of_routes
+
+        #same as above but using built in methods
+        routes_costs = [0.0] * len(routes)
+        for i in range(len(routes)):
+            routes_costs[i] = sum(time_matrix[routes[i][j]][routes[i][j + 1]] for j in range(len(routes[i]) - 1))
+        return max(routes_costs)
 
 
 class Node:

@@ -18,8 +18,13 @@ class Solution:
         #     if(cost_of_current_route > max_cost_of_routes):
         #         max_cost_of_routes=cost_of_current_route
         #return max_cost_of_routes
-        return max(sum(self.routes[i] + self.routes[i + 1] for i in range(0, len(self.routes) - 1))) # same as above in one line
-        
+
+        # same as above but using built in methods
+        routes_costs = [0.0] * len(routes)
+        for i in range(len(self.routes)):
+            routes_costs[i] = sum(time_matrix[self.routes[i][j]][self.routes[i][j + 1]] for j in range(len(self.routes[i]) - 1))
+        return max(routes_costs)
+
 
 class RelocationMove(object):
     def __init__(self):
