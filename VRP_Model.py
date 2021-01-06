@@ -36,6 +36,9 @@ class Model:
         self.time_matrix = [[0.0 for j in range(0, len(self.all_nodes))] for k in range(0, len(self.all_nodes))]
         for i in range(0, len(self.all_nodes)):
             for j in range(0, len(self.all_nodes)):
+                if i == j: # the cost of the node from itself is 0
+                    self.time_matrix[i][j] = 0
+                    continue # continue to the next pair of nodes
                 source = self.all_nodes[i]
                 target = self.all_nodes[j]
                 if target.type == 0: # if the target is the depot then we don't include distance cost
@@ -46,9 +49,10 @@ class Model:
                 else:
                     dx_2 = (source.x - target.x)**2
                     dy_2 = (source.y - target.y) ** 2
-                    dist = round(math.sqrt(dx_2 + dy_2))
-                    self.time_matrix[i][j] = dist/35 + \
+                    dist = round(math.sqrt(dx_2 + dy_2)) # the distance of the 2 nodes
+                    self.time_matrix[i][j] = dist/35 + \ # the time we need to go from source to target with speed 35 km/h
                                              (self.unloading_time_per_type[source.type] + self.unloading_time_per_type[target.type])/(2*60)
+                                                # the unloading cost,
                                                 # /2 is because we need
                                                 # only the half unolading cost
                                                 # *60 is to turn minutes to hours
