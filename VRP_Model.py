@@ -50,7 +50,7 @@ class Model:
                     dx_2 = (source.x - target.x)**2
                     dy_2 = (source.y - target.y) ** 2
                     dist = round(math.sqrt(dx_2 + dy_2)) # the distance of the 2 nodes
-                    self.time_matrix[i][j] = dist/35 + \ # the time we need to go from source to target with speed 35 km/h
+                    self.time_matrix[i][j] = dist/35 + \
                                              (self.unloading_time_per_type[source.type] + self.unloading_time_per_type[target.type])/(2*60)
                                                 # the unloading cost,
                                                 # /2 is because we need
@@ -99,10 +99,13 @@ class Model:
         # return max_cost_of_routes
 
         #same as above but using built in methods
-        routes_costs = [0.0] * len(routes)
-        for i in range(len(routes)):
-            routes_costs[i] = sum(time_matrix[routes[i][j]][routes[i][j + 1]] for j in range(len(routes[i]) - 1))
-        return max(routes_costs)
+        # routes_costs = [0.0] * len(routes)
+        # for i in range(len(routes)):
+        #     routes_costs[i] = sum(time_matrix[routes[i][j]][routes[i][j + 1]] for j in range(len(routes[i]) - 1))
+        # return max(routes_costs)
+
+        #same as above in one line
+        return max(sum(time_matrix[routes[i][j]][routes[i][j+1]] for j in range (len(routes[i]) -1)) for i in range(len(routes)))
 
 
 class Node:
