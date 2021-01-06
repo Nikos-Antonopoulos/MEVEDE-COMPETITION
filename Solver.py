@@ -3,21 +3,21 @@ from SolutionDrawer import *
 
 class Solution:
     def __init__(self): #sider
-        self.maxCostOfRoute = 0.0
+        self.max_cost_of_route = 0.0
         self.routes = []
     
     def CalculateMaxCostOfRoute(self,model):#asking for model to get the matrix
-        maxCostOfRoutes = 0
+        max_cost_of_routes = 0
         for i in range (0, len(self.routes)):#for every route in the specific solution
             rt = self.routes[i] 
-            costOfCurrentRoute = 0
-            for j in range (0, len(rt.sequenceOfNodes) - 1):
+            cost_of_current_route = 0
+            for j in range (0, len(rt.sequenceOfNodes) -1 ):
                 a = rt.sequenceOfNodes[j] 
                 b = rt.sequenceOfNodes[j + 1]
-                costOfCurrentRoute += model.distanceMatrix[a.ID][b.ID]   
-            if(costOfCurrentRoute > maxCostOfRoute):
-                maxCostOfRoutes=costOfCurrentRoute
-        return maxCostOfRoutes
+                cost_of_current_route += model.distanceMatrix[a.ID][b.ID]   
+            if(cost_of_current_route > max_cost_of_routes):
+                max_cost_of_routes=cost_of_current_route
+        return max_cost_of_routes
         
 
 class RelocationMove(object):
@@ -103,7 +103,7 @@ class Solver:
 
     def solve(self):
         self.SetRoutedFlagToFalseForAllCustomers()
-        self.ApplyNearestNeighborMethod()
+     #   self.ApplyNearestNeighborMethod()
         self.MinimumInsertions()
         self.ReportSolution(self.sol)
         self.VND()
@@ -271,12 +271,12 @@ class Solver:
                     if draw:
                         SolDrawer.draw(VNDIterator, self.sol, self.allNodes)
                     VNDIterator = VNDIterator + 1
-                    self.searchTrajectory.append(self.sol.cost)
+                    self.searchTrajectory.append(self.sol.max_cost_of_route)
                     k = 0
                 else:
                     k += 1
 
-            if (self.sol.cost < self.bestSolution.cost):
+            if (self.sol.max_cost_of_route < self.bestSolution.cost):
                 self.bestSolution = self.cloneSolution(self.sol)
 
         SolDrawer.drawTrajectory(self.searchTrajectory)
@@ -304,16 +304,16 @@ class Solver:
             rt = sol.routes[i]
             clonedRoute = self.cloneRoute(rt)
             cloned.routes.append(clonedRoute)
-        cloned.cost = self.sol.cost
+        cloned.cost = self.sol.max_cost_of_route
         return cloned
 
-    def FindBestRelocationMove(self, rm):
-        for originRouteIndex in range(0, len(self.sol.routes)):
+    def FindBestRelocationMove(self, rm):#antonopoulos
+        for originRouteIndex in range(0, len(self.sol.routes)):# Every possible route that a customer can departs from 
             rt1:Route = self.sol.routes[originRouteIndex]
-            for targetRouteIndex in range (0, len(self.sol.routes)):
+            for targetRouteIndex in range (0, len(self.sol.routes)):# Every possible route that the customer can go to 
                 rt2:Route = self.sol.routes[targetRouteIndex]
-                for originNodeIndex in range (1, len(rt1.sequenceOfNodes) - 1):
-                    for targetNodeIndex in range (0, len(rt2.sequenceOfNodes) - 1):
+                for originNodeIndex in range (1, len(rt1.sequenceOfNodes) - 1):# The position of the customer that will depart  
+                    for targetNodeIndex in range (0, len(rt2.sequenceOfNodes) - 1):# Every possible position that the customer can go to 
 
                         if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
                             continue
@@ -397,7 +397,7 @@ class Solver:
 
     def ApplyRelocationMove(self, rm: RelocationMove):
 
-        oldCost = self.CalculateTotalCost(self.sol)
+        oldCost = self.CalculateMaxCostOfRoute(self.sol)
 
         originRt = self.sol.routes[rm.originRoutePosition]
         targetRt = self.sol.routes[rm.targetRoutePosition]
@@ -420,7 +420,7 @@ class Solver:
             originRt.load -= B.demand
             targetRt.load += B.demand
 
-        self.sol.cost += rm.moveCost
+        self.sol.max_cost_of_route += rm.moveCost
 
         self.TestSolution()
 
@@ -451,7 +451,7 @@ class Solver:
             for j in range (0, len(rt.sequenceOfNodes)):
                 print(rt.sequenceOfNodes[j].ID, end=' ')
             print(rt.cost)
-        print (self.sol.cost)
+        print (self.sol.max_cost_of_route )
 
     def GetLastOpenRoute(self):
         if len(self.sol.routes) == 0:
@@ -622,7 +622,7 @@ class Solver:
             self.UpdateRouteCostAndLoad(rt1)
             self.UpdateRouteCostAndLoad(rt2)
 
-        self.sol.cost += top.moveCost
+        self.sol.max_cost_of_route += top.moveCost
         self.TestSolution()
 
     def UpdateRouteCostAndLoad(self, rt: Route):
@@ -657,7 +657,7 @@ class Solver:
 
             totalSolCost += rt.cost
 
-        if abs(totalSolCost - self.sol.cost) > 0.0001:
+        if abs(totalSolCost - self.sol.max_cost_of_route) > 0.0001:
             print('Solution Cost problem')
 
     def IdentifyBestInsertionAllPositions(self, bestInsertion, rt): #sider
@@ -695,7 +695,7 @@ class Solver:
         insIndex = insertion.insertionPosition
         rt.sequenceOfNodes.insert(insIndex + 1, insCustomer) # insCustomer gets inserted after the rt.sequenceOfNodes[indIndex]
         rt.cost += insertion.cost # route's cost gets updated
-        if (rt.cost > self.sol.maxCostOfRoute): # if the new cost of the route is bigger than the maxCostOfRoute of the solution,
+        if (rt.cost > self.sol.max_cost_of_route): # if the new cost of the route is bigger than the maxCostOfRoute of the solution,
                                                 # self.sol.maxCostOfRoute gets updated to the rt.cost
             self.sol.maxCostOfRoute = rt.cost
         rt.load += insCustomer.demand # route's cost gets updated
