@@ -6,26 +6,6 @@ class Solution:
         self.max_cost_of_route = 0.0
         self.routes = []
     
-    def CalculateMaxCostOfRoute(self,model):#asking for model to get the matrix
-        # max_cost_of_routes = 0
-        # for i in range (0, len(self.routes)):#for every route in the specific solution
-        #     rt = self.routes[i]
-        #     cost_of_current_route = 0
-        #     for j in range (0, len(rt.sequenceOfNodes) -1 ):
-        #         a = rt.sequenceOfNodes[j]
-        #         b = rt.sequenceOfNodes[j + 1]
-        #         cost_of_current_route += model.distanceMatrix[a.ID][b.ID]
-        #     if(cost_of_current_route > max_cost_of_routes):
-        #         max_cost_of_routes=cost_of_current_route
-        #return max_cost_of_routes
-
-        # same as above but using built in methods
-        routes_costs = [0.0] * len(self.routes)
-        for i in range(len(self.routes)):
-            routes_costs[i] = sum(time_matrix[self.routes[i][j]][self.routes[i][j + 1]]
-                                  for j in range(len(self.routes[i]) - 1)) # finds the cost of each route
-        return max(routes_costs) # returns the max cost of routes
-
 
 class RelocationMove(object):
     def __init__(self):
@@ -116,7 +96,14 @@ class Solver:
         self.VND()
         self.ReportSolution(self.sol)
         return self.sol
-
+    
+    def CalculateMaxCostOfRoute(self):
+        routes_costs = [0.0] * len(self.sol.routes)
+        for i in range(len(self.sol.routes)):
+            routes_costs[i] = sum(self.distanceMatrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
+                                  for j in range(len(self.sol.routes[i].sequenceOfNodes) - 1))  # finds the cost of each route
+        return max(routes_costs)  # returns the max cost of routes
+    
     def SetRoutedFlagToFalseForAllCustomers(self):
         for i in range(0, len(self.customers)):
             self.customers[i].isRouted = False
