@@ -301,7 +301,7 @@ class Solver:
         cloned.cost = self.sol.max_cost_of_route
         return cloned
 
-    def FindBestRelocationMove(self, rm):#antonopoulos
+   def FindBestRelocationMove(self, rm):#antonopoulos
         for originRouteIndex in range(0, len(self.sol.routes)):# Every possible route that a customer can departs from 
             rt1:Route = self.sol.routes[originRouteIndex]
             for targetRouteIndex in range (0, len(self.sol.routes)):# Every possible route that the customer can go to 
@@ -310,6 +310,8 @@ class Solver:
                     for targetNodeIndex in range (0, len(rt2.sequenceOfNodes) - 1):# Every possible position that the customer can go to 
 
                         if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
+                            #If the relocation will be done on the same Route 
+                                #If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue 
                             continue
 
                         A = rt1.sequenceOfNodes[originNodeIndex - 1]
@@ -319,19 +321,19 @@ class Solver:
                         F = rt2.sequenceOfNodes[targetNodeIndex]
                         G = rt2.sequenceOfNodes[targetNodeIndex + 1]
 
-                        if rt1 != rt2:
-                            if rt2.load + B.demand > rt2.capacity:
+                        if rt1 != rt2: #If the routes are diferrent 
+                            if rt2.load + B.demand > rt2.capacity: #if the capacity constrains are violated then continue
                                 continue
 
-                        costAdded = self.distanceMatrix[A.ID][C.ID] + self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID]
+                        costAdded = self.distanceMatrix[A.ID][C.ID] + self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] 
                         costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[B.ID][C.ID] + self.distanceMatrix[F.ID][G.ID]
 
-                        originRtCostChange = self.distanceMatrix[A.ID][C.ID] - self.distanceMatrix[A.ID][B.ID] - self.distanceMatrix[B.ID][C.ID]
-                        targetRtCostChange = self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] - self.distanceMatrix[F.ID][G.ID]
+                        originRtCostChange = self.distanceMatrix[A.ID][C.ID] - self.distanceMatrix[A.ID][B.ID] - self.distanceMatrix[B.ID][C.ID] #Origin route Cost
+                        targetRtCostChange = self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] - self.distanceMatrix[F.ID][G.ID] #Target route COst
 
-                        moveCost = costAdded - costRemoved
+                        moveCost = costAdded - costRemoved #Profit/loss from the relocation
 
-                        if (moveCost < rm.moveCost) and abs(moveCost) > 0.0001:
+                        if (moveCost < rm.moveCost) and abs(moveCost) > 0.0001:# if the profit is better than the profit that we've already found in the loop
                             self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
 
         return rm.originRoutePosition
