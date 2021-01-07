@@ -6,5 +6,5 @@ m.BuildModel()
 routes=m.load_objects()
 print(m.CalculateMaxCostOfRoute(routes,m.time_matrix))
 
-#s = Solver(m)
-#sol = s.solve()
+s = Solver(m)
+sol = s.solve()

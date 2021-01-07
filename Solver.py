@@ -82,7 +82,7 @@ class Solver:
         self.allNodes = m.all_nodes
         self.customers = m.service_locations
         self.depot = m.all_nodes[0]
-        self.distanceMatrix = m.time_matrix
+        self.time_matrix = m.time_matrix
         self.capacity = m.capacity
         self.sol = None
         self.bestSolution = None
@@ -92,17 +92,19 @@ class Solver:
         self.SetRoutedFlagToFalseForAllCustomers()
      #   self.ApplyNearestNeighborMethod()
         self.MinimumInsertions()
-        self.ReportSolution(self.sol)
-        self.VND()
-        self.ReportSolution(self.sol)
+        # self.ReportSolution(self.sol)
+        # self.VND()
+        # self.ReportSolution(self.sol)
         return self.sol
     
     def CalculateMaxCostOfRoute(self):
-        routes_costs = [0.0] * len(self.sol.routes)
-        for i in range(len(self.sol.routes)):
-            routes_costs[i] = sum(self.distanceMatrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
-                                  for j in range(len(self.sol.routes[i].sequenceOfNodes) - 1))  # finds the cost of each route
-        return max(routes_costs)  # returns the max cost of routes
+        return max(
+            sum(
+                self.time_matrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
+                for j in range(len(self.sol.routes[i].sequenceOfNodes) - 1)
+            ) for i in range(len(self.sol.routes))
+        )
+
     
     def SetRoutedFlagToFalseForAllCustomers(self):
         for i in range(0, len(self.customers)):
@@ -301,8 +303,8 @@ class Solver:
         cloned.cost = self.sol.max_cost_of_route
         return cloned
 
-   def FindBestRelocationMove(self, rm):#antonopoulos
-        for originRouteIndex in range(0, len(self.sol.routes)):# Every possible route that a customer can departs from 
+    def FindBestRelocationMove(self, rm): #antonopoulos
+        for originRouteIndex in range(0, len(self.sol.routes)):# Every possible route that a customer can departs from
             rt1:Route = self.sol.routes[originRouteIndex]
             for targetRouteIndex in range (0, len(self.sol.routes)):# Every possible route that the customer can go to 
                 rt2:Route = self.sol.routes[targetRouteIndex]
@@ -325,11 +327,11 @@ class Solver:
                             if rt2.load + B.demand > rt2.capacity: #if the capacity constrains are violated then continue
                                 continue
 
-                        costAdded = self.distanceMatrix[A.ID][C.ID] + self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] 
-                        costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[B.ID][C.ID] + self.distanceMatrix[F.ID][G.ID]
+                        costAdded = self.time_matrix[A.ID][C.ID] + self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID]
+                        costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[B.ID][C.ID] + self.time_matrix[F.ID][G.ID]
 
-                        originRtCostChange = self.distanceMatrix[A.ID][C.ID] - self.distanceMatrix[A.ID][B.ID] - self.distanceMatrix[B.ID][C.ID] #Origin route Cost
-                        targetRtCostChange = self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] - self.distanceMatrix[F.ID][G.ID] #Target route COst
+                        originRtCostChange = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - self.time_matrix[B.ID][C.ID] #Origin route Cost
+                        targetRtCostChange = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - self.time_matrix[F.ID][G.ID] #Target route COst
 
                         moveCost = costAdded - costRemoved #Profit/loss from the relocation
 
@@ -363,15 +365,15 @@ class Solver:
 
                         if rt1 == rt2:
                             if firstNodeIndex == secondNodeIndex - 1:
-                                costRemoved = self.distanceMatrix[a1.ID][b1.ID] + self.distanceMatrix[b1.ID][b2.ID] + self.distanceMatrix[b2.ID][c2.ID]
-                                costAdded = self.distanceMatrix[a1.ID][b2.ID] + self.distanceMatrix[b2.ID][b1.ID] + self.distanceMatrix[b1.ID][c2.ID]
+                                costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                                costAdded = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
                                 moveCost = costAdded - costRemoved
                             else:
 
-                                costRemoved1 = self.distanceMatrix[a1.ID][b1.ID] + self.distanceMatrix[b1.ID][c1.ID]
-                                costAdded1 = self.distanceMatrix[a1.ID][b2.ID] + self.distanceMatrix[b2.ID][c1.ID]
-                                costRemoved2 = self.distanceMatrix[a2.ID][b2.ID] + self.distanceMatrix[b2.ID][c2.ID]
-                                costAdded2 = self.distanceMatrix[a2.ID][b1.ID] + self.distanceMatrix[b1.ID][c2.ID]
+                                costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                                costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                                costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                                costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
                                 moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                         else:
                             if rt1.load - b1.demand + b2.demand > self.capacity:
@@ -379,10 +381,10 @@ class Solver:
                             if rt2.load - b2.demand + b1.demand > self.capacity:
                                 continue
 
-                            costRemoved1 = self.distanceMatrix[a1.ID][b1.ID] + self.distanceMatrix[b1.ID][c1.ID]
-                            costAdded1 = self.distanceMatrix[a1.ID][b2.ID] + self.distanceMatrix[b2.ID][c1.ID]
-                            costRemoved2 = self.distanceMatrix[a2.ID][b2.ID] + self.distanceMatrix[b2.ID][c2.ID]
-                            costAdded2 = self.distanceMatrix[a2.ID][b1.ID] + self.distanceMatrix[b1.ID][c2.ID]
+                            costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                            costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                            costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                            costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
 
                             costChangeFirstRoute = costAdded1 - costRemoved1
                             costChangeSecondRoute = costAdded2 - costRemoved2
@@ -461,7 +463,7 @@ class Solver:
             if candidateCust.isRouted is False:
                 if rt.load + candidateCust.demand <= rt.capacity:
                     lastNodePresentInTheRoute = rt.sequenceOfNodes[-2]
-                    trialCost = self.distanceMatrix[lastNodePresentInTheRoute.ID][candidateCust.ID]
+                    trialCost = self.time_matrix[lastNodePresentInTheRoute.ID][candidateCust.ID]
                     if trialCost < bestInsertion.cost:
                         bestInsertion.customer = candidateCust
                         bestInsertion.route = rt
@@ -476,8 +478,8 @@ class Solver:
 
         beforeInserted = rt.sequenceOfNodes[-3]
 
-        costAdded = self.distanceMatrix[beforeInserted.ID][insCustomer.ID] + self.distanceMatrix[insCustomer.ID][self.depot.ID]
-        costRemoved = self.distanceMatrix[beforeInserted.ID][self.depot.ID]
+        costAdded = self.time_matrix[beforeInserted.ID][insCustomer.ID] + self.time_matrix[insCustomer.ID][self.depot.ID]
+        costRemoved = self.time_matrix[beforeInserted.ID][self.depot.ID]
 
         rt.cost += costAdded - costRemoved
         self.sol.cost += costAdded - costRemoved
@@ -511,7 +513,7 @@ class Solver:
             for j in range (0, len(rt.sequenceOfNodes) - 1):#goes back to base as well
                 a = rt.sequenceOfNodes[j] 
                 b = rt.sequenceOfNodes[j + 1]
-                c += self.distanceMatrix[a.ID][b.ID] #adding cost from current node to the next node. 
+                c += self.time_matrix[a.ID][b.ID] #adding cost from current node to the next node.
         return c #returns the cost of the object:sol that belongs to class:Solution
 
     def InitializeOperators(self, rm, sm, top):
@@ -520,7 +522,6 @@ class Solver:
         top.Initialize()
 
     def FindBestTwoOptMove(self, top): #spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
-        #note DistanceMatrix to be renamed as TimeMatrix ?
         for rtInd1 in range(0, len(self.sol.routes)):
             rt1:Route = self.sol.routes[rtInd1] #initialization of index 1 (starting node of intersection)
             for rtInd2 in range(rtInd1, len(self.sol.routes)):
@@ -541,8 +542,8 @@ class Solver:
                         if rt1 == rt2:
                             if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
                                 continue
-                            costAdded = self.distanceMatrix[A.ID][K.ID] + self.distanceMatrix[B.ID][L.ID]
-                            costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[K.ID][L.ID]
+                            costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
+                            costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
                             moveCost = costAdded - costRemoved
                         else:
                             if nodeInd1 == 0 and nodeInd2 == 0:
@@ -552,9 +553,9 @@ class Solver:
 
                             if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
                                 continue
-                            costAdded = self.distanceMatrix[A.ID][L.ID] + self.distanceMatrix[B.ID][K.ID] #we add the cost of the 2 arcs created
+                            costAdded = self.time_matrix[A.ID][L.ID] + self.time_matrix[B.ID][K.ID] #we add the cost of the 2 arcs created
                                                                                                           #which are A-K B-L
-                            costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[K.ID][L.ID] #we remove the cost of the 2 arcs deleted
+                            costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID] #we remove the cost of the 2 arcs deleted
                                                                                                             #which are A-B K-L
                             moveCost = costAdded - costRemoved #calculation of Dz for current 2-opt move
                         if moveCost < top.moveCost and abs(moveCost) > 0.0001: #compares current move cost with best move cost at the time and stores best
@@ -630,16 +631,14 @@ class Solver:
         for i in range(0, len(rt.sequenceOfNodes) - 1):
             A = rt.sequenceOfNodes[i]
             B = rt.sequenceOfNodes[i+1]
-            tc += self.distanceMatrix[A.ID][B.ID]
+            tc += self.time_matrix[A.ID][B.ID]
             tl += A.demand
         rt.load = tl
         rt.cost = tc
 
     def TestSolution(self): # sider
-        # TO BE UPDATED ACCORDING TO MIN MAX PROBLEM
         if (len(self.sol.routes) > 25): # if the solution used more routes than the routes available
             print("Routes' number problem.")
-        totalSolCost = 0
         for r in range (0, len(self.sol.routes)):
             rt: Route = self.sol.routes[r]
             rtCost = 0
@@ -647,17 +646,15 @@ class Solver:
             for n in range (0 , len(rt.sequenceOfNodes) - 1):
                 A = rt.sequenceOfNodes[n]
                 B = rt.sequenceOfNodes[n + 1]
-                rtCost += self.distanceMatrix[A.ID][B.ID]
+                rtCost += self.time_matrix[A.ID][B.ID]
                 rtLoad += A.demand
             if abs(rtCost - rt.cost) > 0.0001:
                 print ('Route Cost problem')
             if rtLoad != rt.load:
                 print ('Route Load problem')
-
-            totalSolCost += rt.cost
-
-        if abs(totalSolCost - self.sol.max_cost_of_route) > 0.0001:
-            print('Solution Cost problem')
+        if abs(self.CalculateMaxCostOfRoute() - self.sol.max_cost_of_route) > 0.0001:
+            print('Solution Cost problem, solution cost: ' + str(self.sol.max_cost_of_route) +
+                  ' calculated cost: ' + str(self.CalculateMaxCostOfRoute()))
 
     def IdentifyBestInsertionAllPositions(self, bestInsertion, rt): #sider
         # bestInsertion: type of CustomerInsertionAllPositions rt: type of Route
@@ -674,8 +671,8 @@ class Solver:
                                                                     # than the current best insertion
                         A = rt.sequenceOfNodes[j]
                         B = rt.sequenceOfNodes[j + 1]
-                        costAdded = self.distanceMatrix[A.ID][candidateCust.ID] + self.distanceMatrix[candidateCust.ID][B.ID] # the costs of the 2 new connections created
-                        costRemoved = self.distanceMatrix[A.ID][B.ID] # the cost of the connection that broke (it will be reduced from the trialCost)
+                        costAdded = self.time_matrix[A.ID][candidateCust.ID] + self.time_matrix[candidateCust.ID][B.ID] # the costs of the 2 new connections created
+                        costRemoved = self.time_matrix[A.ID][B.ID] # the cost of the connection that broke (it will be reduced from the trialCost)
                         trialCost = costAdded - costRemoved # how the cost changed after the insertion
 
                         if trialCost < bestInsertion.cost: # bestInsertion.cost is initialized to 10 ** 9
@@ -694,9 +691,9 @@ class Solver:
         insIndex = insertion.insertionPosition
         rt.sequenceOfNodes.insert(insIndex + 1, insCustomer) # insCustomer gets inserted after the rt.sequenceOfNodes[indIndex]
         rt.cost += insertion.cost # route's cost gets updated
-        if (rt.cost > self.sol.max_cost_of_route): # if the new cost of the route is bigger than the maxCostOfRoute of the solution,
-                                                # self.sol.maxCostOfRoute gets updated to the rt.cost
-            self.sol.maxCostOfRoute = rt.cost
+        if rt.cost > self.sol.max_cost_of_route: # if the new cost of the route is bigger than the max_cost_of_route of the solution,
+                                                 # self.sol.max_cost_of_route gets updated to the rt.cost
+            self.sol.max_cost_of_route = rt.cost
         rt.load += insCustomer.demand # route's cost gets updated
         insCustomer.isRouted = True # inserted customer marked as routed
 

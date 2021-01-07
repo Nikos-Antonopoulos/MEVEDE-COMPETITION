@@ -23,9 +23,7 @@ def FindFirstUnmatched(matching,U) :
         if matching[u] == None :
             return u
 
-def ComputeDelta(g,odd_nodes,even_nodes,costs,prices,final) :
-    min = sys.maxsize
-    for u in even_nodes :
+def ComputeDelta(g,oddes :
         for v in g[u] :
             if v not in odd_nodes :
                 if  ASSIGNMENT :
