@@ -6,33 +6,6 @@ class Solution:
         self.max_cost_of_route = 0.0
         self.routes = []
     
-    def CalculateMaxCostOfRoute(self,model):#asking for model to get the matrix
-        # max_cost_of_routes = 0
-        # for i in range (0, len(self.routes)):#for every route in the specific solution
-        #     rt = self.routes[i]
-        #     cost_of_current_route = 0
-        #     for j in range (0, len(rt.sequenceOfNodes) -1 ):
-        #         a = rt.sequenceOfNodes[j]
-        #         b = rt.sequenceOfNodes[j + 1]
-        #         cost_of_current_route += model.distanceMatrix[a.ID][b.ID]
-        #     if(cost_of_current_route > max_cost_of_routes):
-        #         max_cost_of_routes=cost_of_current_route
-        #return max_cost_of_routes
-
-        # same as above but using built in methods
-        # routes_costs = [0.0] * len(self.routes)
-        # for i in range(len(self.routes)):
-        #     routes_costs[i] = sum(model.time_matrix[self.routes[i][j]][self.routes[i][j + 1]]
-        #                           for j in range(len(self.routes[i]) - 1)) # finds the cost of each route
-        # return max(routes_costs) # returns the max cost of routes
-
-        # same as above in one line
-        return max(
-                    sum(
-                        model.time_matrix[self.routes[i][j]][self.routes[i][j + 1]] for j in range(len(self.routes[i]) - 1)
-                    )for i in range(len(self.routes))
-                )
-
 
 class RelocationMove(object):
     def __init__(self):
@@ -123,7 +96,14 @@ class Solver:
         self.VND()
         self.ReportSolution(self.sol)
         return self.sol
-
+    
+    def CalculateMaxCostOfRoute(self):
+        routes_costs = [0.0] * len(self.sol.routes)
+        for i in range(len(self.sol.routes)):
+            routes_costs[i] = sum(self.distanceMatrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
+                                  for j in range(len(self.sol.routes[i].sequenceOfNodes) - 1))  # finds the cost of each route
+        return max(routes_costs)  # returns the max cost of routes
+    
     def SetRoutedFlagToFalseForAllCustomers(self):
         for i in range(0, len(self.customers)):
             self.customers[i].isRouted = False
@@ -321,7 +301,7 @@ class Solver:
         cloned.cost = self.sol.max_cost_of_route
         return cloned
 
-    def FindBestRelocationMove(self, rm):#antonopoulos
+   def FindBestRelocationMove(self, rm):#antonopoulos
         for originRouteIndex in range(0, len(self.sol.routes)):# Every possible route that a customer can departs from 
             rt1:Route = self.sol.routes[originRouteIndex]
             for targetRouteIndex in range (0, len(self.sol.routes)):# Every possible route that the customer can go to 
@@ -330,6 +310,8 @@ class Solver:
                     for targetNodeIndex in range (0, len(rt2.sequenceOfNodes) - 1):# Every possible position that the customer can go to 
 
                         if originRouteIndex == targetRouteIndex and (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
+                            #If the relocation will be done on the same Route 
+                                #If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue 
                             continue
 
                         A = rt1.sequenceOfNodes[originNodeIndex - 1]
@@ -339,19 +321,19 @@ class Solver:
                         F = rt2.sequenceOfNodes[targetNodeIndex]
                         G = rt2.sequenceOfNodes[targetNodeIndex + 1]
 
-                        if rt1 != rt2:
-                            if rt2.load + B.demand > rt2.capacity:
+                        if rt1 != rt2: #If the routes are diferrent 
+                            if rt2.load + B.demand > rt2.capacity: #if the capacity constrains are violated then continue
                                 continue
 
-                        costAdded = self.distanceMatrix[A.ID][C.ID] + self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID]
+                        costAdded = self.distanceMatrix[A.ID][C.ID] + self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] 
                         costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[B.ID][C.ID] + self.distanceMatrix[F.ID][G.ID]
 
-                        originRtCostChange = self.distanceMatrix[A.ID][C.ID] - self.distanceMatrix[A.ID][B.ID] - self.distanceMatrix[B.ID][C.ID]
-                        targetRtCostChange = self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] - self.distanceMatrix[F.ID][G.ID]
+                        originRtCostChange = self.distanceMatrix[A.ID][C.ID] - self.distanceMatrix[A.ID][B.ID] - self.distanceMatrix[B.ID][C.ID] #Origin route Cost
+                        targetRtCostChange = self.distanceMatrix[F.ID][B.ID] + self.distanceMatrix[B.ID][G.ID] - self.distanceMatrix[F.ID][G.ID] #Target route COst
 
-                        moveCost = costAdded - costRemoved
+                        moveCost = costAdded - costRemoved #Profit/loss from the relocation
 
-                        if (moveCost < rm.moveCost) and abs(moveCost) > 0.0001:
+                        if (moveCost < rm.moveCost) and abs(moveCost) > 0.0001:# if the profit is better than the profit that we've already found in the loop
                             self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost, originRtCostChange, targetRtCostChange, rm)
 
         return rm.originRoutePosition
@@ -537,23 +519,24 @@ class Solver:
         sm.Initialize()
         top.Initialize()
 
-    def FindBestTwoOptMove(self, top):
+    def FindBestTwoOptMove(self, top): #spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
+        #note DistanceMatrix to be renamed as TimeMatrix ?
         for rtInd1 in range(0, len(self.sol.routes)):
-            rt1:Route = self.sol.routes[rtInd1]
+            rt1:Route = self.sol.routes[rtInd1] #initialization of index 1 (starting node of intersection)
             for rtInd2 in range(rtInd1, len(self.sol.routes)):
-                rt2:Route = self.sol.routes[rtInd2]
+                rt2:Route = self.sol.routes[rtInd2] #initialization of index 2 (landing node after resolving intersection)
                 for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):
                     start2 = 0
                     if (rt1 == rt2):
-                        start2 = nodeInd1 + 2
+                        start2 = nodeInd1 + 2 #landing point must be at least 2 positions after starting point
 
                     for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
                         moveCost = 10 ** 9
 
-                        A = rt1.sequenceOfNodes[nodeInd1]
-                        B = rt1.sequenceOfNodes[nodeInd1 + 1]
-                        K = rt2.sequenceOfNodes[nodeInd2]
-                        L = rt2.sequenceOfNodes[nodeInd2 + 1]
+                        A = rt1.sequenceOfNodes[nodeInd1] #the starting node of the intersection
+                        B = rt1.sequenceOfNodes[nodeInd1 + 1] #the next node of the starting node
+                        K = rt2.sequenceOfNodes[nodeInd2] #the node that we land to continue the sequence after resolving the intersection
+                        L = rt2.sequenceOfNodes[nodeInd2 + 1] #the next node of node K
 
                         if rt1 == rt2:
                             if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
@@ -569,10 +552,12 @@ class Solver:
 
                             if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
                                 continue
-                            costAdded = self.distanceMatrix[A.ID][L.ID] + self.distanceMatrix[B.ID][K.ID]
-                            costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[K.ID][L.ID]
-                            moveCost = costAdded - costRemoved
-                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                            costAdded = self.distanceMatrix[A.ID][L.ID] + self.distanceMatrix[B.ID][K.ID] #we add the cost of the 2 arcs created
+                                                                                                          #which are A-K B-L
+                            costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[K.ID][L.ID] #we remove the cost of the 2 arcs deleted
+                                                                                                            #which are A-B K-L
+                            moveCost = costAdded - costRemoved #calculation of Dz for current 2-opt move
+                        if moveCost < top.moveCost and abs(moveCost) > 0.0001: #compares current move cost with best move cost at the time and stores best
                             self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
 
@@ -597,7 +582,7 @@ class Solver:
 
         return False
 
-    def StoreBestTwoOptMove(self, rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
+    def StoreBestTwoOptMove(self, rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top): #spy ---> this method keeps the routes and nodes of current best 2-opt move
         top.positionOfFirstRoute = rtInd1
         top.positionOfSecondRoute = rtInd2
         top.positionOfFirstNode = nodeInd1
