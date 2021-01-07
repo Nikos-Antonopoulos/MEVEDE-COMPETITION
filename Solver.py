@@ -530,23 +530,24 @@ class Solver:
         sm.Initialize()
         top.Initialize()
 
-    def FindBestTwoOptMove(self, top):
+    def FindBestTwoOptMove(self, top): #spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
+        #note DistanceMatrix to be renamed as TimeMatrix ?
         for rtInd1 in range(0, len(self.sol.routes)):
-            rt1:Route = self.sol.routes[rtInd1]
+            rt1:Route = self.sol.routes[rtInd1] #initialization of index 1 (starting node of intersection)
             for rtInd2 in range(rtInd1, len(self.sol.routes)):
-                rt2:Route = self.sol.routes[rtInd2]
+                rt2:Route = self.sol.routes[rtInd2] #initialization of index 2 (landing node after resolving intersection)
                 for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):
                     start2 = 0
                     if (rt1 == rt2):
-                        start2 = nodeInd1 + 2
+                        start2 = nodeInd1 + 2 #landing point must be at least 2 positions after starting point
 
                     for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
                         moveCost = 10 ** 9
 
-                        A = rt1.sequenceOfNodes[nodeInd1]
-                        B = rt1.sequenceOfNodes[nodeInd1 + 1]
-                        K = rt2.sequenceOfNodes[nodeInd2]
-                        L = rt2.sequenceOfNodes[nodeInd2 + 1]
+                        A = rt1.sequenceOfNodes[nodeInd1] #the starting node of the intersection
+                        B = rt1.sequenceOfNodes[nodeInd1 + 1] #the next node of the starting node
+                        K = rt2.sequenceOfNodes[nodeInd2] #the node that we land to continue the sequence after resolving the intersection
+                        L = rt2.sequenceOfNodes[nodeInd2 + 1] #the next node of node K
 
                         if rt1 == rt2:
                             if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
@@ -562,10 +563,12 @@ class Solver:
 
                             if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
                                 continue
-                            costAdded = self.distanceMatrix[A.ID][L.ID] + self.distanceMatrix[B.ID][K.ID]
-                            costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[K.ID][L.ID]
-                            moveCost = costAdded - costRemoved
-                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                            costAdded = self.distanceMatrix[A.ID][L.ID] + self.distanceMatrix[B.ID][K.ID] #we add the cost of the 2 arcs created
+                                                                                                          #which are A-K B-L
+                            costRemoved = self.distanceMatrix[A.ID][B.ID] + self.distanceMatrix[K.ID][L.ID] #we remove the cost of the 2 arcs deleted
+                                                                                                            #which are A-B K-L
+                            moveCost = costAdded - costRemoved #calculation of Dz for current 2-opt move
+                        if moveCost < top.moveCost and abs(moveCost) > 0.0001: #compares current move cost with best move cost at the time and stores best
                             self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
 
@@ -590,7 +593,7 @@ class Solver:
 
         return False
 
-    def StoreBestTwoOptMove(self, rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top):
+    def StoreBestTwoOptMove(self, rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top): #spy ---> this method keeps the routes and nodes of current best 2-opt move
         top.positionOfFirstRoute = rtInd1
         top.positionOfSecondRoute = rtInd2
         top.positionOfFirstNode = nodeInd1
