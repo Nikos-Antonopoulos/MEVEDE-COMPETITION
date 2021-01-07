@@ -120,10 +120,12 @@ class Solver:
             for zach_node in zach_route:
                 new_route.sequenceOfNodes.append(self.allNodes[zach_node])
             self.sol.routes.append(new_route)
-        if (self.CalculateMaxCostOfRoute() == 16.271428571428572):
+        calculated_max_cost = self.CalculateMaxCostOfRoute()
+        if calculated_max_cost == 16.271428571428572:
             print("All good in zach's example")
         else:
-            print("Something is wrong in zach's example")
+            print("Something is wrong in zach's example. Answer found: " + str(calculated_max_cost) +
+                  ", correct answer: 16.271428571428572")
     def solve(self):
         self.SetRoutedFlagToFalseForAllCustomers()
      #   self.ApplyNearestNeighborMethod()
