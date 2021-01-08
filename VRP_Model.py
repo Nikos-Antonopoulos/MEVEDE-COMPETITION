@@ -117,6 +117,12 @@ class Node:
         self.x = xx
         self.y = yy
 
+    def distance_from_depot(self):
+        dx_2 = (self.x - 50) ** 2
+        dy_2 = (self.y - 50) ** 2
+        return round(math.sqrt(dx_2 + dy_2))
+
+
 
 class Route:
     def __init__(self, dp, cap):  # One route, a node that's the depot, and the capacity
