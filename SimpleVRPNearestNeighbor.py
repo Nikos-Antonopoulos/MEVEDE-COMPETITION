@@ -11,11 +11,9 @@ class CustomerInsertion(object):
         self.customer = None
         self.route = None
         self.cost = 10 ** 9
-        self.subjective_cost = 10 ** 9 # subjective cost is the cost of an insertion that considers the effect on the
-                                       # min max cost of the solution too
 
-class SolverNrstNghbr:
-    def __init__(self, m, siders_constant):
+class SolverSimpleNrstNghbr:
+    def __init__(self, m):
         self.allNodes = m.all_nodes
         self.customers = m.service_locations
         self.depot = m.all_nodes[0]
@@ -24,12 +22,6 @@ class SolverNrstNghbr:
         self.sol = None
         self.bestSolution = None
         self.searchTrajectory = []
-        self.siders_constant = siders_constant # after some tries 5.75 had the best result for unsorted customers and
-                                               # 4.5 for sorted
-                                               # it is a constant that defines how strong the effect of the change
-                                               # an insertion causes on the min max solution relatively to the
-                                               # trialCost of the insertion (the cost on the route)
-                                               # see find_best_insertion_for_customer for the use
 
     def solve(self, with_sort = False): # with sort variable defines if the nearest_neighbor_with_opened_routes will
                                         # sort the self.customers
@@ -120,49 +112,26 @@ class SolverNrstNghbr:
                 self.find_best_insertion_for_customer(candidate_cust, best_insertion_for_customer) # finds the best
                                                                                                    # insertion for the
                                                                                                    # particular customer
-                if best_insertion_for_customer.subjective_cost < best_insertion.subjective_cost:
+                if best_insertion_for_customer.cost < best_insertion.cost:
                     # if the best insertion of the checking customer is better than the best insertion at this moment
-                    # according to the subjective cost (the cost that takes into account how the new insertion affects
-                    # the min max cost of the solution)
-                    # the fields of bestInsertion will be updated according to the new best insertion found
+                    # according to the trial cost
                     best_insertion.customer = best_insertion_for_customer.customer
                     best_insertion.route = best_insertion_for_customer.route
                     best_insertion.cost = best_insertion_for_customer.cost
-                    best_insertion.subjective_cost = best_insertion_for_customer.subjective_cost
 
     def find_best_insertion_for_customer(self, candidate_cust, best_insertion_for_customer):
         for route in self.sol.routes: # iterate all routes
             if route.load + candidate_cust.demand <= route.capacity: # if the route's capacity constraint is not violated
                 last_node_present_in_the_route = route.sequenceOfNodes[-2]
                 trial_cost = self.time_matrix[last_node_present_in_the_route.ID][candidate_cust.ID]
-                cost_added = self.time_matrix[last_node_present_in_the_route.ID][candidate_cust.ID] +\
-                             self.time_matrix[candidate_cust.ID][self.depot.ID] # the costs of the 2 new connections created
-                cost_removed = self.time_matrix[last_node_present_in_the_route.ID][self.depot.ID] # the cost of the
-                                                    # connection that broke (it will be reduced from the change_in_solution)
-                change_in_solution = cost_added - cost_removed
-                subjective_cost_of_insertion = trial_cost  # if the new insertion does not affect the min max cost
-                                                           # of the solution, then subjective_cost equals trial_cost
 
-                # if the new cost of the route (route.cost + trial.cost) is bigger than the current min max cost of
-                # the solution, then the difference between the new cost and the previous min max cost gets multiplied
-                # with siders_constant and the result gets added to the subjective cost.
-                # This is done in order to take into account if an insertion affects the min max cost of the solution
-                if route.cost + change_in_solution > self.sol.max_cost_of_route:
-                    subjective_cost_of_insertion += self.siders_constant * \
-                                                    (route.cost + change_in_solution - self.sol.max_cost_of_route)
-
-                if subjective_cost_of_insertion < best_insertion_for_customer.subjective_cost:
+                if trial_cost < best_insertion_for_customer.cost:
                     # if the best insertion of the checking customer is better than the best insertion at this moment
                     # according to the subjective cost (subjective cost is initialized to 10**9)
                     # the fields of bestInsertion will be updated according to the new best insertion found
                     best_insertion_for_customer.customer = candidate_cust
                     best_insertion_for_customer.route = route
                     best_insertion_for_customer.cost = trial_cost
-                    best_insertion_for_customer.subjective_cost = subjective_cost_of_insertion
-
-
-
-
 
 
 
