@@ -36,42 +36,43 @@ class Solver:
 
     def paper_structure_method(self,with_sort):#NikosA
         print("hio")
-        Unserved_locations=m.service_locations #All the customers that havent been served
+        Unserved_locations=self.customers.copy() #All the customers that havent been served
         routes=[None]*25 #Array that has 25 objects of Route type
         depot = Node(0, 0, 0, 50, 50)        
         self.sol = Solution()
+        
         for i in range(25):
             routes[i]=Route(depot,3000)#initializing every route so that it begins and ends  to the depot
             self.sol.routes.append(routes[i])    
         if with_sort: # if sort is needed, self.customers get sorted
             self.customers.sort(key=Node.distance_from_depot)
 
-
-
+        print(self.customers)
         while(Unserved_locations):
-            for i in range(0, len(Unserved_locations)):
-                node_to_be_inserted:Node = Unserved_locations[i] #komvos gia eisagwgh
+            for i in range(0, len(self.customers)):
+                print(i)
+                node_to_be_inserted:Node = self.customers[i] #komvos gia eisagwgh
                 best_insertion = CustomerInsertionAllPositions()
                 self.find_best_insertion(node_to_be_inserted,best_insertion)
 
-            if best_insertion.customer is not None:
-                
-                if(len(best_insertion.potential_candidates_for_insertion)==1):
-                    self.ApplyCustomerInsertionAllPositions(best_insertion)
-                
-                elif(len(best_insertion.potential_candidates_for_insertion)>1):
-                    best_insertion=random.choice(best_insertion.potential_candidates_for_insertion)
-                    self.ApplyCustomerInsertionAllPositions(best_insertion)
-                else:
-                    print("there are no potential customers")
-                Unserved_locations.remove(best_insertion.customer)
+                if best_insertion.customer is not None:
+                    
+                    if(len(best_insertion.potential_candidates_for_insertion)==1):
+                        self.ApplyCustomerInsertionAllPositions(best_insertion)
+                    
+                    elif(len(best_insertion.potential_candidates_for_insertion)>1):
+                        best_insertion=random.choice(best_insertion.potential_candidates_for_insertion)
+                        self.ApplyCustomerInsertionAllPositions(best_insertion)
+                    else:
+                        print("there are no potential customers")
+                    Unserved_locations.remove(best_insertion.customer)
 
 
-                #Remove the node from unserved
-                #Add the node to potential positions
-            else: 
-                print("No solution could be found ")
-                break
+                    #Remove the node from unserved
+                    #Add the node to potential positions
+                else: 
+                    print("No solution could be found ")
+                    break
         self.TestSolution()
     
     def find_best_insertion(self,node_to_be_inserted,best_insertion):
