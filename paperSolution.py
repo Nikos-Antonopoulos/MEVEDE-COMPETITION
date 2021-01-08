@@ -65,7 +65,6 @@ class Solver:
                 
                 else:
                     print("there are no potential customers")
-                print(best_insertion.customer)
                 Unserved_locations.remove(best_insertion.customer)
 
 
