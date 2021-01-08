@@ -108,7 +108,7 @@ class Model:
         #same as above in one line
         return max(sum(time_matrix[routes[i][j]][routes[i][j+1]] for j in range (len(routes[i]) -1)) for i in range(len(routes)))
 
-
+    
 class Node:
     def __init__(self, id, tp, dem, xx, yy):
         self.ID = id
@@ -117,12 +117,16 @@ class Node:
         self.x = xx
         self.y = yy
 
+
     def distance_from_depot(self):
         dx_2 = (self.x - 50) ** 2
         dy_2 = (self.y - 50) ** 2
         return round(math.sqrt(dx_2 + dy_2))
 
 
+    
+    def __repr__(self):
+        return ("\nid= "+str(self.ID)+"  type="+str(self.type)+"  demand="+str(self.demand)+"  x="+str(self.x)+"  y="+str(self.y))
 
 class Route:
     def __init__(self, dp, cap):  # One route, a node that's the depot, and the capacity
@@ -132,3 +136,6 @@ class Route:
         self.cost = 0
         self.capacity = cap
         self.load = 0
+    
+    def __repr__(self):
+        return ("sequenceOfNodes= "+str(self.sequenceOfNodes)+"  cost="+str(self.cost)+"  capacity="+str(self.capacity)+"  load="+str(self.load))
