@@ -42,37 +42,38 @@ class Solver:
 
     def paper_structure_method(self,with_sort):#NikosA
         Unserved_locations=self.customers.copy() #All the customers that havent been served
-        routes=[None]*25 #Array that has 25 objects of Route type
-        depot = Node(0, 0, 0, 50, 50)        
+      
         self.sol = Solution()
-        
-        for i in range(25):
-            routes[i]=Route(depot,3000)#initializing every route so that it begins and ends  to the depot
-            self.sol.routes.append(routes[i])    
+        self.open_routes(25)
+      
         if with_sort: # if sort is needed, self.customers get sorted
             self.customers.sort(key=Node.distance_from_depot)
-
+      #  i=0
         while(Unserved_locations):
-            for i in range(0, len(self.customers)):
+            print("nikos")
+            for i in range(0, len(Unserved_locations)):
                 node_to_be_inserted:Node = self.customers[i] #komvos gia eisagwgh
+
                 best_insertion = CustomerInsertionAllPositions()
                 self.find_best_insertion(node_to_be_inserted,best_insertion)
-
-                if best_insertion.customer is not None:
-                    
-                    if(len(best_insertion.potential_candidates_for_insertion)==1):
-                        self.ApplyCustomerInsertionAllPositions(best_insertion)
-                  
-                    else:
-                        print("there are no potential customers")
-                    Unserved_locations.remove(best_insertion.customer)
+            print("ton vrhkame ton vazoume ")
+            print(best_insertion.customer)
+            if best_insertion.customer is not None:
+                
+                if(len(best_insertion.potential_candidates_for_insertion)==1):
+                    self.ApplyCustomerInsertionAllPositions(best_insertion)
+                
+                else:
+                    print("there are no potential customers")
+                print(best_insertion.customer)
+                Unserved_locations.remove(best_insertion.customer)
 
 
                     #Remove the node from unserved
                     #Add the node to potential positions
-                else: 
-                    print("No solution could be found ")
-                    break
+            else: 
+                print("No solution could be found ")
+                break
         self.TestSolution()
     
     def find_best_insertion(self,node_to_be_inserted,best_insertion):
@@ -93,15 +94,15 @@ class Solver:
                     trial_objective_change= current_route.cost + trial_cost - self.sol.max_cost_of_route
                     #kata poso h allagh auksanei to kostos thn antikeimenikh 
 
-                if(trial_objective_change < best_insertion.objective_change):
-                    best_insertion.customer = node_to_be_inserted
-                    best_insertion.route = current_route
-                    best_insertion.cost = trial_cost
-                    best_insertion.insertionPosition = k  # the position after which the bestInsertion.customer will be inserted
-                    best_insertion.objective_change = trial_objective_change
-                    best_insertion.potential_candidates_for_insertion.clear()
-                    best_insertion.potential_candidates_for_insertion.append(best_insertion)
-            
+                    if(trial_objective_change < best_insertion.objective_change):
+                        best_insertion.customer = node_to_be_inserted
+                        best_insertion.route = current_route
+                        best_insertion.cost = trial_cost
+                        best_insertion.insertionPosition = k  # the position after which the bestInsertion.customer will be inserted
+                        best_insertion.objective_change = trial_objective_change
+                        best_insertion.potential_candidates_for_insertion.clear()
+                        best_insertion.potential_candidates_for_insertion.append(best_insertion)
+                
     def ApplyCustomerInsertionAllPositions(self,insertion): #sider
         # insertion: type of CustomerInsertionAllPositions
         # the new insetion will be added to the current solution
