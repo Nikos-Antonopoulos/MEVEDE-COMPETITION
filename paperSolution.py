@@ -47,6 +47,7 @@ class Solver:
         if with_sort: # if sort is needed, self.customers get sorted
             self.customers.sort(key=Node.distance_from_depot)
 
+        print(self.customers)
         while(Unserved_locations):
             for i in range(0, len(self.customers)):
                 node_to_be_inserted:Node = self.customers[i] #komvos gia eisagwgh
@@ -82,8 +83,8 @@ class Solver:
                     A:Node = current_route.sequenceOfNodes[k]#node_after_which_the_new_node_can_be_inserted
                     B:Node = current_route.sequenceOfNodes[k+1]#node_before_which_the_new_node_can_be_inserted
 
-                    costAdded= self.time_matrix[B.ID][node_to_be_inserted.ID] 
-                    + self.time_matrix[node_to_be_inserted.ID][A.ID]
+                    costAdded= self.time_matrix[A.ID][node_to_be_inserted.ID] 
+                    + self.time_matrix[node_to_be_inserted.ID][B.ID]
                    
                     costRemoved= self.time_matrix[A.ID][B.ID]
                     
@@ -117,9 +118,9 @@ class Solver:
         insIndex = insertion.insertionPosition
         rt.sequenceOfNodes.insert(insIndex + 1, insCustomer) # insCustomer gets inserted after the rt.sequenceOfNodes[indIndex]
         rt.cost += insertion.cost # route's cost gets updated
-    #   if rt.cost > self.sol.max_cost_of_route: # if the new cost of the route is bigger than the max_cost_of_route of the solution,
+        if rt.cost > self.sol.max_cost_of_route: # if the new cost of the route is bigger than the max_cost_of_route of the solution,
                                                     # self.sol.max_cost_of_route gets updated to the rt.cost
-    #     self.sol.max_cost_of_route = rt.cost
+            self.sol.max_cost_of_route = rt.cost
         rt.load += insCustomer.demand # route's cost gets updated
         insCustomer.isRouted = True # inserted customer marked as routed
 
