@@ -47,10 +47,8 @@ class Solver:
         if with_sort: # if sort is needed, self.customers get sorted
             self.customers.sort(key=Node.distance_from_depot)
 
-        print(self.customers)
         while(Unserved_locations):
             for i in range(0, len(self.customers)):
-                print(i)
                 node_to_be_inserted:Node = self.customers[i] #komvos gia eisagwgh
                 best_insertion = CustomerInsertionAllPositions()
                 self.find_best_insertion(node_to_be_inserted,best_insertion)
