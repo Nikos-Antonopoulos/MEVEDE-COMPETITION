@@ -135,7 +135,7 @@ class Solver:
         # self.ReportSolution(self.sol)
         return self.sol
     
-    def CalculateMaxCostOfRoute(self):
+    def CalculateMaxCostOfRoute(self): # calculates the max cost of the routes in the current solution
         return max(
             sum(
                 self.time_matrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
