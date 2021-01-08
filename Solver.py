@@ -88,7 +88,7 @@ class Solver:
         self.bestSolution = None
         self.searchTrajectory = []
 
-    def check_zach_example(self):
+    def check_zach_example(self): #sider
         zach_routes = routes = [[0, 1, 50, 65, 101, 130, 150, 165, 183, 0],
                   [0, 2, 46, 74, 77, 96, 120, 146, 179, 0],
                   [0, 3, 34, 72, 104, 123, 145, 162, 194, 0],
@@ -135,7 +135,8 @@ class Solver:
         # self.ReportSolution(self.sol)
         return self.sol
     
-    def CalculateMaxCostOfRoute(self): # calculates the max cost of the routes in the current solution
+    def CalculateMaxCostOfRoute(self): # sider
+        # returns the max cost of the routes in the current solution
         return max(
             sum(
                 self.time_matrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
