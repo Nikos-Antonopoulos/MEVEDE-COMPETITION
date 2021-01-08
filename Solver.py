@@ -677,31 +677,32 @@ class Solver:
         rt.load = tl
         rt.cost = tc
 
-    def TestSolution(self): # sider # NEEDS TO BE OPTIMIZED
-        if len(self.sol.routes) > 25: # if the solution used more routes than the routes available
+    def TestSolution(self):  # sider
+        if len(self.sol.routes) > 25:  # if the solution used more routes than the routes available
             print("Routes' number problem.")
-        for r in range (0, len(self.sol.routes)):
+        max_cost_of_route = 0
+        nodes_serviced = 0
+        for r in range(0, len(self.sol.routes)):
             rt: Route = self.sol.routes[r]
+            nodes_serviced += len(rt.sequenceOfNodes) - 2  # -2 because we remove depot that exist twice in every route
             rtCost = 0
             rtLoad = 0
-            for n in range (0 , len(rt.sequenceOfNodes) - 1):
+            for n in range(0, len(rt.sequenceOfNodes) - 1):
                 A = rt.sequenceOfNodes[n]
                 B = rt.sequenceOfNodes[n + 1]
                 rtCost += self.time_matrix[A.ID][B.ID]
                 rtLoad += A.demand
             if abs(rtCost - rt.cost) > 0.0001:
-                print ('Route Cost problem')
+                print('Route Cost problem')
             if rtLoad != rt.load:
-                print ('Route Load problem')
-        max_cost_of_route = max(
-            sum(
-                self.time_matrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
-                for j in range(len(self.sol.routes[i].sequenceOfNodes) - 1)
-            ) for i in range(len(self.sol.routes))
-        )
+                print('Route Load problem')
+            if rtCost > max_cost_of_route:
+                max_cost_of_route = rtCost
         if abs(max_cost_of_route - self.sol.max_cost_of_route) > 0.0001:
             print('Solution Cost problem, solution cost: ' + str(self.sol.max_cost_of_route) +
                   ' calculated cost: ' + str(self.CalculateMaxCostOfRoute()))
+        if nodes_serviced != len(self.customers):
+            print('Number of serviced nodes problem')
 
     def IdentifyBestInsertionAllPositions(self, bestInsertion, rt): #sider
         # bestInsertion: type of CustomerInsertionAllPositions rt: type of Route

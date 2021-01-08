@@ -25,17 +25,17 @@ class Solver:
         self.sol = None
         self.bestSolution = None
         self.searchTrajectory = []
-        self.siders_constant = siders_constant # it is a constant that defines how strong the effect of the change
+        self.siders_constant = siders_constant # after some tries 5.25 had the best result
+                                               # it is a constant that defines how strong the effect of the change
                                                # an insertion causes on the min max solution relatively to the
                                                # trialCost of the insertion (the cost on the route)
+                                               # see find_best_insertion_for_customer for the use
 
     def solve(self, with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
         self.SetRoutedFlagToFalseForAllCustomers()
-     #   self.ApplyNearestNeighborMethod()
         self.minimum_insertions_with_opened_routes(with_sort)
         # self.ReportSolution(self.sol)
-        # self.VND()
         SolDrawer.draw(0, self.sol, self.allNodes)
         return self.sol
 
@@ -51,31 +51,32 @@ class Solver:
         # returns the max cost of the routes in the current solution
         return max(route.cost for route in self.sol.routes)
 
-    def TestSolution(self):  # sider # NEEDS TO BE OPTIMIZED
+    def TestSolution(self):  # sider
         if len(self.sol.routes) > 25:  # if the solution used more routes than the routes available
             print("Routes' number problem.")
+        max_cost_of_route = 0
+        nodes_serviced = 0
         for r in range(0, len(self.sol.routes)):
             rt: Route = self.sol.routes[r]
-            rtCost = 0
-            rtLoad = 0
+            nodes_serviced += len(rt.sequenceOfNodes) - 2 # -2 because we remove depot that exist twice in every route
+            rt_cost = 0
+            rt_load = 0
             for n in range(0, len(rt.sequenceOfNodes) - 1):
                 A = rt.sequenceOfNodes[n]
                 B = rt.sequenceOfNodes[n + 1]
-                rtCost += self.time_matrix[A.ID][B.ID]
-                rtLoad += A.demand
-            if abs(rtCost - rt.cost) > 0.0001:
+                rt_cost += self.time_matrix[A.ID][B.ID]
+                rt_load += A.demand
+            if abs(rt_cost - rt.cost) > 0.0001:
                 print('Route Cost problem')
-            if rtLoad != rt.load:
+            if rt_load != rt.load:
                 print('Route Load problem')
-        max_cost_of_route = max(
-            sum(
-                self.time_matrix[self.sol.routes[i].sequenceOfNodes[j].ID][self.sol.routes[i].sequenceOfNodes[j + 1].ID]
-                for j in range(len(self.sol.routes[i].sequenceOfNodes) - 1)
-            ) for i in range(len(self.sol.routes))
-        )
+            if rt_cost > max_cost_of_route:
+                max_cost_of_route = rt_cost
         if abs(max_cost_of_route - self.sol.max_cost_of_route) > 0.0001:
             print('Solution Cost problem, solution cost: ' + str(self.sol.max_cost_of_route) +
                   ' calculated cost: ' + str(self.CalculateMaxCostOfRoute()))
+        if nodes_serviced != len(self.customers):
+            print('Number of serviced nodes problem')
 
     def SetRoutedFlagToFalseForAllCustomers(self):
         for i in range(0, len(self.customers)):
@@ -85,15 +86,16 @@ class Solver:
     def minimum_insertions_with_opened_routes(self, with_sort): # sider
         self.sol = Solution()
         insertions = 0
-        self.open_routes(25)
-        if with_sort:
+        self.open_routes(25) # 25 routes get opened
+        if with_sort: # if sort is needed, self.customers get sorted
             self.customers.sort(key=Node.distance_from_depot)
 
         while insertions < len(self.customers): # while there are customers that are not inserted
             best_insertion = CustomerInsertionAllPositions()
-            self.identify_best_insertion_in_all_routes(best_insertion)
+            self.identify_best_insertion_in_all_routes(best_insertion) # the best insertion gets found
 
-            if best_insertion.customer is not None:
+            if best_insertion.customer is not None: # if best_insertion was found
+                                                    # (which means at least one valid insertion found)
                 self.ApplyCustomerInsertionAllPositions(best_insertion)  # insertion gets added to self.sol
                 insertions += 1
 
@@ -103,17 +105,24 @@ class Solver:
         self.TestSolution()
 
     def open_routes(self, number_of_routes):
+        # number_of_routs: an int that show how many routes will be opened
+        # open a route --> add an empty route to the routes of the current solution
         for i in range(number_of_routes):
             rt = Route(self.depot, self.capacity)  # a new route gets opened
             self.sol.routes.append(rt)  # the new route gets added to the solution
 
     def identify_best_insertion_in_all_routes(self, best_insertion):
-        for i in range(len(self.customers)):
-            candidate_cust: Node = self.customers[i]
-            if candidate_cust.isRouted is False:
+        for i in range(len(self.customers)): # iterate all customers
+            candidate_cust: Node = self.customers[i] # the current checking customer
+            if candidate_cust.isRouted is False: # if the customer is not routed
                 best_insertion_for_customer = CustomerInsertionAllPositions()
-                self.find_best_insertion_for_customer(candidate_cust, best_insertion_for_customer)
+                self.find_best_insertion_for_customer(candidate_cust, best_insertion_for_customer) # finds the best
+                                                                                                   # insertion for the
+                                                                                                   # particular customer
                 if best_insertion_for_customer.subjective_cost < best_insertion.subjective_cost:
+                    # if the best insertion of the checking customer is better than the best insertion at this moment
+                    # according to the subjective cost (the cost that takes into account how the new insertion affects
+                    # the min max cost of the solution)
                     # the fields of bestInsertion will be updated according to the new best insertion found
                     best_insertion.customer = best_insertion_for_customer.customer
                     best_insertion.route = best_insertion_for_customer.route
@@ -123,31 +132,38 @@ class Solver:
 
 
     def find_best_insertion_for_customer(self, candidate_cust, best_insertion_for_customer):
-        for route in self.sol.routes:
-            if route.load + candidate_cust.demand <= route.capacity:
-                for i in range(0, len(route.sequenceOfNodes) - 1):  # j is the index of a node in rt(parameter).sequenceOfNodes
-                                                                 # it will be checked if the insertion of candidateCust between
-                                                                 # rt.sequenceOfNodes[j] and rt.sequenceOfNodes[j+1] costs less
-                                                                 # than the current best insertion
+        for route in self.sol.routes: # iterate all routes
+            if route.load + candidate_cust.demand <= route.capacity: # if the route's capacity constraint is not violated
+                for i in range(0, len(route.sequenceOfNodes) - 1):  # iterate all the possible position for an insertion
+                                                                    # in a route
                     A = route.sequenceOfNodes[i]
                     B = route.sequenceOfNodes[i + 1]
-                    costAdded = self.time_matrix[A.ID][candidate_cust.ID] + self.time_matrix[candidate_cust.ID][
+                    cost_added = self.time_matrix[A.ID][candidate_cust.ID] + self.time_matrix[candidate_cust.ID][
                         B.ID]  # the costs of the 2 new connections created
-                    costRemoved = self.time_matrix[A.ID][
+                    cost_removed = self.time_matrix[A.ID][
                         B.ID]  # the cost of the connection that broke (it will be reduced from the trialCost)
-                    trialCost = costAdded - costRemoved  # how the cost changed after the insertion
+                    trial_cost = cost_added - cost_removed  # how the cost changed after the insertion
 
-                    subjective_cost_of_insertion = trialCost
-                    if route.cost + trialCost > self.sol.max_cost_of_route:
-                        subjective_cost_of_insertion += self.siders_constant*(route.cost + trialCost - self.sol.max_cost_of_route)
+                    subjective_cost_of_insertion = trial_cost # if the new insertion does not affect the min max cost
+                                                             # of the solution, then subjective_cost equals trial_cost
+
+                    # if the new cost of the route (route.cost + trial.cost) is bigger than the current min max cost of
+                    # the solution, then the difference between the new cost and the previous min max cost gets multiplied
+                    # with siders_constant and the result gets added to the subjective cost.
+                    # This is done in order to take into account if an insertion affects the min max cost of the solution
+                    if route.cost + trial_cost > self.sol.max_cost_of_route:
+                        subjective_cost_of_insertion += self.siders_constant *\
+                                                               (route.cost + trial_cost - self.sol.max_cost_of_route)
 
 
 
-                    if  subjective_cost_of_insertion < best_insertion_for_customer.subjective_cost:  # bestInsertion.cost is initialized to 10 ** 9
+                    if  subjective_cost_of_insertion < best_insertion_for_customer.subjective_cost:
+                         # if the best insertion of the checking customer is better than the best insertion at this moment
+                         # according to the subjective cost (subjective cost is initialized to 10**9)
                          # the fields of bestInsertion will be updated according to the new best insertion found
                          best_insertion_for_customer.customer = candidate_cust
                          best_insertion_for_customer.route = route
-                         best_insertion_for_customer.cost = trialCost
+                         best_insertion_for_customer.cost = trial_cost
                          best_insertion_for_customer.insertionPosition = i  # the position after which the bestInsertion.customer will be inserted
                          best_insertion_for_customer.subjective_cost = subjective_cost_of_insertion
 
