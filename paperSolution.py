@@ -19,7 +19,6 @@ class Solution:
 class Solver:
     def solve(self, with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
-        print("hi")
         self.paper_structure_method(with_sort)
         self.ReportSolution(self.sol)
         SolDrawer.draw(0, self.sol, self.allNodes)
@@ -33,9 +32,15 @@ class Solver:
         self.capacity = m.capacity
         self.sol = None
         self.bestSolution = None
+  
+    def open_routes(self, number_of_routes):
+        # number_of_routs: an int that show how many routes will be opened
+        # open a route --> add an empty route to the routes of the current solution
+        for i in range(number_of_routes):
+            rt = Route(self.depot, self.capacity)  # a new route gets opened
+            self.sol.routes.append(rt)  # the new route gets added to the solution
 
     def paper_structure_method(self,with_sort):#NikosA
-        print("hio")
         Unserved_locations=self.customers.copy() #All the customers that havent been served
         routes=[None]*25 #Array that has 25 objects of Route type
         depot = Node(0, 0, 0, 50, 50)        
@@ -47,7 +52,6 @@ class Solver:
         if with_sort: # if sort is needed, self.customers get sorted
             self.customers.sort(key=Node.distance_from_depot)
 
-        print(self.customers)
         while(Unserved_locations):
             for i in range(0, len(self.customers)):
                 node_to_be_inserted:Node = self.customers[i] #komvos gia eisagwgh
@@ -58,10 +62,7 @@ class Solver:
                     
                     if(len(best_insertion.potential_candidates_for_insertion)==1):
                         self.ApplyCustomerInsertionAllPositions(best_insertion)
-                    
-                    elif(len(best_insertion.potential_candidates_for_insertion)>1):
-                        best_insertion=random.choice(best_insertion.potential_candidates_for_insertion)
-                        self.ApplyCustomerInsertionAllPositions(best_insertion)
+                  
                     else:
                         print("there are no potential customers")
                     Unserved_locations.remove(best_insertion.customer)
@@ -100,15 +101,7 @@ class Solver:
                     best_insertion.objective_change = trial_objective_change
                     best_insertion.potential_candidates_for_insertion.clear()
                     best_insertion.potential_candidates_for_insertion.append(best_insertion)
-                    # AUTO TO SHMEIO PREPEI NA ALLAKSEI GIATI DEN YPOLOGIZW TO TRIAL LENGTH SOLUTION KAI TO BEST_ISNERTION.SOLUTION_LENGTH AKOMA 
-                elif( (trial_objective_change==best_insertion.objective_change) and trial_cost < best_insertion.cost):
-                    best_insertion.customer = node_to_be_inserted
-                    best_insertion.route = current_route
-                    best_insertion.cost = trial_cost
-                    best_insertion.insertionPosition = k  # the position after which the bestInsertion.customer will be inserted
-                    best_insertion.objective_change = trial_objective_change
-                    best_insertion.potential_candidates_for_insertion.append(best_insertion)                    
-    
+            
     def ApplyCustomerInsertionAllPositions(self,insertion): #sider
         # insertion: type of CustomerInsertionAllPositions
         # the new insetion will be added to the current solution
