@@ -101,7 +101,7 @@ class SolverMinIns:
 
             else:
                 print("No solution could be found.")
-                break;
+                break
         self.TestSolution()
 
     def open_routes(self, number_of_routes):
