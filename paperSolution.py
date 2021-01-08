@@ -101,16 +101,14 @@ class Solver:
                     best_insertion.objective_change = trial_objective_change
                     best_insertion.potential_candidates_for_insertion.clear()
                     best_insertion.potential_candidates_for_insertion.append(best_insertion)
-                    trial_length_solution = 5
                     # AUTO TO SHMEIO PREPEI NA ALLAKSEI GIATI DEN YPOLOGIZW TO TRIAL LENGTH SOLUTION KAI TO BEST_ISNERTION.SOLUTION_LENGTH AKOMA 
-                elif( (trial_objective_change==best_insertion.objective_change) and trial_length_solution<best_insertion.solution_length):
+                elif( (trial_objective_change==best_insertion.objective_change) and trial_cost < best_insertion.cost):
                     best_insertion.customer = node_to_be_inserted
                     best_insertion.route = current_route
                     best_insertion.cost = trial_cost
                     best_insertion.insertionPosition = k  # the position after which the bestInsertion.customer will be inserted
                     best_insertion.objective_change = trial_objective_change
                     best_insertion.potential_candidates_for_insertion.append(best_insertion)                    
-                    trial_length_solution = 5
     
     def ApplyCustomerInsertionAllPositions(self,insertion): #sider
         # insertion: type of CustomerInsertionAllPositions
