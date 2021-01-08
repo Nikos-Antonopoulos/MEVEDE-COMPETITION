@@ -24,13 +24,14 @@ class SolverNrstNghtbr:
         self.sol = None
         self.bestSolution = None
         self.searchTrajectory = []
-        self.siders_constant = siders_constant # after some tries 5.25 had the best result
+        self.siders_constant = siders_constant # after some tries 5.75 had the best result for unsorted customers and
+                                               # 4.5 for sorted
                                                # it is a constant that defines how strong the effect of the change
                                                # an insertion causes on the min max solution relatively to the
                                                # trialCost of the insertion (the cost on the route)
                                                # see find_best_insertion_for_customer for the use
 
-    def solve(self, with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
+    def solve(self, with_sort = False): # with sort variable defines if the nearest_neighbor_with_opened_routes will
                                         # sort the self.customers
         self.SetRoutedFlagToFalseForAllCustomers()
         self.nearest_neighbor_with_opened_routes(with_sort)
@@ -80,39 +81,6 @@ class SolverNrstNghtbr:
     def SetRoutedFlagToFalseForAllCustomers(self):
         for i in range(0, len(self.customers)):
             self.customers[i].isRouted = False
-
-    def nearest_neighbor_with_open_routes(self):  # spy
-        modelIsFeasible = True
-        self.sol = Solution()
-        insertions = 0
-
-        while (insertions < len(self.customers)):  # while there are still not visited nodes
-            bestInsertion = CustomerInsertion()  # CustomerInsertion defines an insertion (customer, route, cost)
-            lastOpenRoute: Route = self.GetLastOpenRoute()  # returns the last open route (if it exists)
-            # which is the route in the last position
-            # of the matrix routes ( routes[-1] )
-
-            if lastOpenRoute is not None:
-                self.IdentifyBestInsertion(bestInsertion,
-                                           lastOpenRoute)  # sets as bestInsertion the node (from the not routed nodes)
-                # which is the nearest neighbor to the last
-                # node in the examining route
-
-            if (bestInsertion.customer is not None):  # applies best insertion and modifies cost and load respectively
-                self.ApplyCustomerInsertion(bestInsertion)
-                insertions += 1
-            else:
-                # if there is an empty available route
-                if lastOpenRoute is not None and len(lastOpenRoute.sequenceOfNodes) == 2:
-                    modelIsFeasible = False
-                    break
-                else:
-                    rt = Route(self.depot, self.capacity)
-                    self.sol.routes.append(rt)
-
-        if (modelIsFeasible == False):
-            print('FeasibilityIssue')
-            # reportSolution
 
     def nearest_neighbor_with_opened_routes(self, with_sort): # sider
         self.sol = Solution()
@@ -182,7 +150,7 @@ class SolverNrstNghtbr:
                 cost_added = self.time_matrix[last_node_present_in_the_route.ID][candidate_cust.ID] +\
                              self.time_matrix[candidate_cust.ID][self.depot.ID] # the costs of the 2 new connections created
                 cost_removed = self.time_matrix[last_node_present_in_the_route.ID][self.depot.ID] # the cost of the
-                                                    # connection that broke (it will be reduced from the trialCost)
+                                                    # connection that broke (it will be reduced from the change_in_solution)
                 change_in_solution = cost_added - cost_removed
                 subjective_cost_of_insertion = trial_cost  # if the new insertion does not affect the min max cost
                                                            # of the solution, then subjective_cost equals trial_cost
