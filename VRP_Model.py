@@ -5,7 +5,7 @@ import pprint
 
 class Model:
 
-    def __init__(self):
+    def __init__(self): # markou, sider
         self.all_nodes = []  # All the nodes that are included in the model plus the depot
         self.service_locations = []  # All the locations that have to be served
         self.time_matrix = []  # Time Matrix created from the distance matrix and the node type.
@@ -17,7 +17,7 @@ class Model:
             3 : 25
         }
 
-    def BuildModel(self):
+    def BuildModel(self): # markou, sider
         depot = Node(0, 0, 0, 50, 50)
         self.all_nodes.append(depot)
         random.seed(1)
@@ -85,7 +85,8 @@ class Model:
                   [0, 25, 26, 45, 63, 66, 83, 109, 121, 132, 172, 0]]
         return routes
 
-    def CalculateMaxCostOfRoute(self, routes, time_matrix):  # asking for model to get the matrix
+    def CalculateMaxCostOfRoute(self, routes, time_matrix): #sider   WILL GET DELETED
+        # asking for model to get the matrix
         # max_cost_of_routes = 0
         # for i in range(0, len(routes)):  # for every route in the specific solution
         #     list_i = routes[i]
