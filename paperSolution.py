@@ -21,7 +21,7 @@ class Solver:
                                         # sort the self.customers
         self.paper_structure_method(with_sort)
         self.ReportSolution(self.sol)
-        SolDrawer.draw(0, self.sol, self.allNodes)
+        SolDrawer.draw(1, self.sol, self.allNodes)
         return self.sol
         
     def __init__(self, m):
@@ -64,7 +64,6 @@ class Solver:
                     total_best_insertion.insertionPosition = best_insertion.insertionPosition  # the position after which the bestInsertion.customer will be inserted
                     total_best_insertion.objective_change = best_insertion.objective_change
                     total_best_insertion.potential_candidates_for_insertion=best_insertion.potential_candidates_for_insertion.copy()
-                
             if total_best_insertion.customer is not None:
                 
                 if(len(best_insertion.potential_candidates_for_insertion)==1):
@@ -91,12 +90,13 @@ class Solver:
                     A:Node = current_route.sequenceOfNodes[k]#node_after_which_the_new_node_can_be_inserted
                     B:Node = current_route.sequenceOfNodes[k+1]#node_before_which_the_new_node_can_be_inserted
 
-                    costAdded= self.time_matrix[A.ID][node_to_be_inserted.ID] 
-                    + self.time_matrix[node_to_be_inserted.ID][B.ID]
+                    costAdded= self.time_matrix[A.ID][node_to_be_inserted.ID]   + self.time_matrix[node_to_be_inserted.ID][B.ID]
                    
                     costRemoved= self.time_matrix[A.ID][B.ID]
                     
                     trial_cost = costAdded-costRemoved
+                    if(trial_cost<=0):
+                        print("LMAO")
                     trial_objective_change = current_route.cost + trial_cost - self.sol.max_cost_of_route
                     #kata poso h allagh auksanei to kostos thn antikeimenikh 
 
