@@ -50,22 +50,29 @@ class Solver:
             self.customers.sort(key=Node.distance_from_depot)
       #  i=0
         while(Unserved_locations):
-            print("nikos")
+            total_best_insertion = CustomerInsertionAllPositions()
             for i in range(0, len(Unserved_locations)):
-                node_to_be_inserted:Node = self.customers[i] #komvos gia eisagwgh
-
+                node_to_be_inserted:Node = Unserved_locations[i] #komvos gia eisagwgh
                 best_insertion = CustomerInsertionAllPositions()
                 self.find_best_insertion(node_to_be_inserted,best_insertion)
-            print("ton vrhkame ton vazoume ")
-            print(best_insertion.customer)
-            if best_insertion.customer is not None:
+
+                if(best_insertion.objective_change  < total_best_insertion.objective_change):
+
+                    total_best_insertion.customer = best_insertion.customer
+                    total_best_insertion.route = best_insertion.route
+                    total_best_insertion.cost = best_insertion.cost
+                    total_best_insertion.insertionPosition = best_insertion.insertionPosition  # the position after which the bestInsertion.customer will be inserted
+                    total_best_insertion.objective_change = best_insertion.objective_change
+                    total_best_insertion.potential_candidates_for_insertion=best_insertion.potential_candidates_for_insertion.copy()
+                
+            if total_best_insertion.customer is not None:
                 
                 if(len(best_insertion.potential_candidates_for_insertion)==1):
-                    self.ApplyCustomerInsertionAllPositions(best_insertion)
+                    self.ApplyCustomerInsertionAllPositions(total_best_insertion    )
                 
                 else:
                     print("there are no potential customers")
-                Unserved_locations.remove(best_insertion.customer)
+                Unserved_locations.remove(total_best_insertion.customer)
 
 
                     #Remove the node from unserved
@@ -76,7 +83,7 @@ class Solver:
         self.TestSolution()
     
     def find_best_insertion(self,node_to_be_inserted,best_insertion):
-         for j in range(0,len(self.sol.routes)):
+        for j in range(0,len(self.sol.routes)):
             current_route:Route = self.sol.routes[j] #route pou tha bei o komvos 
             if(node_to_be_inserted.demand + current_route.load<=current_route.capacity):
                 for k in range (0,len(current_route.sequenceOfNodes)-1): #thesh pou tha bei o komvos 
@@ -90,7 +97,7 @@ class Solver:
                     costRemoved= self.time_matrix[A.ID][B.ID]
                     
                     trial_cost = costAdded-costRemoved
-                    trial_objective_change= current_route.cost + trial_cost - self.sol.max_cost_of_route
+                    trial_objective_change = current_route.cost + trial_cost - self.sol.max_cost_of_route
                     #kata poso h allagh auksanei to kostos thn antikeimenikh 
 
                     if(trial_objective_change < best_insertion.objective_change):
@@ -111,6 +118,7 @@ class Solver:
         insIndex = insertion.insertionPosition
         rt.sequenceOfNodes.insert(insIndex + 1, insCustomer) # insCustomer gets inserted after the rt.sequenceOfNodes[indIndex]
         rt.cost += insertion.cost # route's cost gets updated
+
         if rt.cost > self.sol.max_cost_of_route: # if the new cost of the route is bigger than the max_cost_of_route of the solution,
                                                     # self.sol.max_cost_of_route gets updated to the rt.cost
             self.sol.max_cost_of_route = rt.cost
@@ -163,7 +171,6 @@ class CustomerInsertionAllPositions(object):
         self.insertionPosition = None
         self.cost = 10 ** 9
         self.objective_change = 10 ** 9 
-        self.solution_length = -10
         self.potential_candidates_for_insertion=[]
 
 
