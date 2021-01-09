@@ -41,7 +41,7 @@ class SolverMinIns:
         self.SetRoutedFlagToFalseForAllCustomers()
         self.minimum_insertions_with_opened_routes(with_sort)
         # self.ReportSolution(self.sol)
-        SolDrawer.draw(seed, self.sol, self.allNodes)
+        # SolDrawer.draw(seed, self.sol, self.allNodes)
         return self.sol
 
     def ReportSolution(self, sol):
