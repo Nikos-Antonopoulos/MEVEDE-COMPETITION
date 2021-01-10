@@ -272,7 +272,7 @@ class Solver:
 
             self.TestSolution()
 
-            if (self.sol.cost < self.bestSolution.cost):
+            if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
                 self.bestSolution = self.cloneSolution(self.sol)
 
             localSearchIterator = localSearchIterator + 1
