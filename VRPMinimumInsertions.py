@@ -37,7 +37,7 @@ class SolverMinIns:
 
     def solve(self, seed= 1 , with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
-        random.Random(seed)
+        random.seed(seed)
         self.SetRoutedFlagToFalseForAllCustomers()
         self.minimum_insertions_with_opened_routes(with_sort)
         # self.ReportSolution(self.sol)
