@@ -106,6 +106,7 @@ class SolverMinIns:
 
             else:
                 print("No solution could be found.")
+                self.sol.max_cost_of_route = 10**9 # a really big cost in order not to be chosen
                 break
         self.TestSolution()
 
@@ -133,8 +134,8 @@ class SolverMinIns:
                                                                                                    # particular customer
                 if best_insertion_for_customer.subjective_cost < best_insertion.subjective_cost or \
                         (best_insertion.subjective_cost == best_insertion_for_customer.subjective_cost #same subj_cost
-                         and random.random() > 1/insertions_with_same_subj_cost # random choice using reservoir sampling
-                        and len(best_insertion_for_customer.route.sequenceOfNodes) > 2): # don't take into considerations
+                         and random.random() < 1/insertions_with_same_subj_cost # random choice using reservoir sampling
+                        and len(best_insertion_for_customer.route.sequenceOfNodes) > 2): # don't take into consideration
                                                                                       # the cases where routes contain
                                                                                       # nothing more than depot
                     # if the best insertion of the checking customer is better than the best insertion at this moment
@@ -180,7 +181,9 @@ class SolverMinIns:
                     else:
                         subjective_cost_of_insertion += self.siders_constant2 * dist_from_max_cost
 
-                    if  subjective_cost_of_insertion < best_insertion_for_customer.subjective_cost:
+                    if  subjective_cost_of_insertion < best_insertion_for_customer.subjective_cost: # don't take into consideration
+                                                                                      # the cases where routes contain
+                                                                                      # nothing more than depot
                          # if the best insertion of the checking customer is better than the best insertion at this moment
                          # according to the subjective cost (subjective cost is initialized to 10**9)
                          # the fields of bestInsertion will be updated according to the new best insertion found
