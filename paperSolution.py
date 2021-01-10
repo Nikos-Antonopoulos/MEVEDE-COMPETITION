@@ -3,10 +3,7 @@ from VRP_Model import *
 import pprint,random
 from SolutionDrawer import *
 
-m = Model()
-m.BuildModel()
-s=Solver(m)
-s.solve()
+
 
 class Solution:
     def __init__(self): #sider
@@ -68,7 +65,7 @@ class Solver:
                 
                 if(len(best_insertion.potential_candidates_for_insertion)==1):
                     self.ApplyCustomerInsertionAllPositions(total_best_insertion    )
-                
+
                 else:
                     print("there are no potential customers")
                 Unserved_locations.remove(total_best_insertion.customer)
@@ -95,8 +92,8 @@ class Solver:
                     costRemoved= self.time_matrix[A.ID][B.ID]
                     
                     trial_cost = costAdded-costRemoved
-                    if(trial_cost<=0):
-                        print("LMAO")
+                    
+                    
                     trial_objective_change = current_route.cost + trial_cost - self.sol.max_cost_of_route
                     #kata poso h allagh auksanei to kostos thn antikeimenikh 
 
@@ -108,7 +105,17 @@ class Solver:
                         best_insertion.objective_change = trial_objective_change
                         best_insertion.potential_candidates_for_insertion.clear()
                         best_insertion.potential_candidates_for_insertion.append(best_insertion)
-                
+                    elif( (trial_objective_change==best_insertion.objective_change) and trial_cost < best_insertion.cost):
+                        if(random.random()>0.5):
+                            best_insertion.customer = node_to_be_inserted
+                            best_insertion.route = current_route
+                            best_insertion.cost = trial_cost
+                            best_insertion.insertionPosition = k  # the position after which the bestInsertion.customer will be inserted
+                            best_insertion.objective_change = trial_objective_change
+                            best_insertion.potential_candidates_for_insertion.clear()
+                            best_insertion.potential_candidates_for_insertion.append(best_insertion)
+
+
     def ApplyCustomerInsertionAllPositions(self,insertion): #sider
         # insertion: type of CustomerInsertionAllPositions
         # the new insetion will be added to the current solution
@@ -157,6 +164,7 @@ class Solver:
         return max(route.cost for route in self.sol.routes)
    
     def ReportSolution(self, sol):
+        print("hi")
         for i in range(0, len(sol.routes)):
             rt = sol.routes[i]
             for j in range (0, len(rt.sequenceOfNodes)):

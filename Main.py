@@ -1,4 +1,3 @@
-from Solver import *
 from VRP_Model import *
 from paperSolution import *
 import pprint
