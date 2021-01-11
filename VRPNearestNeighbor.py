@@ -1,5 +1,6 @@
 from VRP_Model import *
 from SolutionDrawer import *
+from Relocations import *
 
 class Solution:
     def __init__(self): #sider
@@ -35,6 +36,9 @@ class SolverNrstNghbr:
                                         # sort the self.customers
         self.SetRoutedFlagToFalseForAllCustomers()
         self.nearest_neighbor_with_opened_routes(with_sort)
+        # print("start", self.sol.max_cost_of_route)
+        # reloc = Relocations(self)
+        # reloc.solveRelocations()
         # self.ReportSolution(self.sol)
         # SolDrawer.draw(0, self.sol, self.allNodes)
         return self.sol
