@@ -28,7 +28,7 @@ class SolDrawer:
         if sol is not None:
             for r in range(0, len(sol.routes)):
                 rt = sol.routes[r]
-                for i in range(0, len(rt.sequenceOfNodes) - 1):
+                for i in range(0, len(rt.sequenceOfNodes) - 2):
                     c0 = rt.sequenceOfNodes[i]
                     c1 = rt.sequenceOfNodes[i + 1]
                     plt.plot([c0.x, c1.x], [c0.y, c1.y], c=cmap(r))
