@@ -113,8 +113,8 @@ class TwoOptMoveImplication:
         #rt1: Route = self.sol.routes[rtInd1]  # initialization of index 1 (starting node of intersection)
         for rtInd2 in range(0, len(self.sol.routes)):
             rt2: Route = self.sol.routes[rtInd2]  # initialization of index 2 (landing node after resolving intersection)
-            for nodeInd1 in range(1, len(rt1.sequenceOfNodes) - 1):# den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
-                start2 = 1
+            for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):# den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
+                start2 = 0
                 if (rt1 == rt2):
                     start2 = nodeInd1 + 2  # landing point must be at least 2 positions after starting point
 
