@@ -64,7 +64,7 @@ class Combined:
         self.bestSolution = None
         self.searchTrajectory = []
 
-    def solveRelocations(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
+    def solveCombined(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
         # sort the self.customers
         self.LocalSearch(0)
         return self.sol
