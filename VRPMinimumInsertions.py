@@ -42,12 +42,12 @@ class SolverMinIns:
         random.seed(seed)
         self.SetRoutedFlagToFalseForAllCustomers()
         self.minimum_insertions_with_opened_routes(with_sort)
-        # print("start", self.sol.max_cost_of_route)
-        # reloc = Relocations(self)
-        # reloc.solveRelocations()
-        # print("reloc", self.sol.max_cost_of_route)
-        # swap = Swaps(self)
-        # swap.solveSwaps()
+        print("start", self.sol.max_cost_of_route)
+        swap = Swaps(self)
+        swap.solveSwaps()
+        print("swaps", self.sol.max_cost_of_route)
+        reloc = Relocations(self)
+        reloc.solveRelocations()
 
 
         # self.ReportSolution(self.sol)

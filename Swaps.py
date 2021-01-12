@@ -97,7 +97,7 @@ class Swaps:
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         firstRouteIndex = unpack[0]  # unpack index
         rt1 = unpack[1]  # unpack Route
-        for secondRouteIndex in range(firstRouteIndex, len(self.sol.routes)):  # for every route that has not been checked for the first root
+        for secondRouteIndex in range(0, len(self.sol.routes)):  # for every route that has not been checked for the first root
             rt2: Route = self.sol.routes[secondRouteIndex]  # the route from which a node will be swapped
             for firstNodeIndex in range(1, len(rt1.sequenceOfNodes) - 1):  # for every node of the first route
                 startOfSecondNodeIndex = 1  # start index for the second route
