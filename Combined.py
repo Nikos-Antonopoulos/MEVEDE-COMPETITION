@@ -3,10 +3,12 @@ from VRPMinimumInsertions import *
 from SolutionDrawer import *
 import random
 
+
 class Solution:
-    def __init__(self): #sider
+    def __init__(self):  # sider
         self.max_cost_of_route = 0.0
         self.routes = []
+
 
 class RelocationMove(object):
     def __init__(self):
@@ -26,6 +28,7 @@ class RelocationMove(object):
         self.costChangeOriginRt = None
         self.costChangeTargetRt = None
         self.moveCost = 10 ** 9
+
 
 class SwapMove(object):
     def __init__(self):
@@ -61,17 +64,18 @@ class Combined:
         self.bestSolution = None
         self.searchTrajectory = []
 
-    def solveRelocations(self): # with sort variable defines if the minimum_insertions_with_opened_routes will
-                                        # sort the self.customers
-        self.VND()
+    def solveRelocations(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
+        # sort the self.customers
+        self.LocalSearch(0)
         return self.sol
 
-    def FindRouteWithMaxCost(self): # mo
+    def FindRouteWithMaxCost(self):  # mo
         # function returning the route with the maximum cost and its index in the list of routes
         for i in range(len(self.sol.routes)):
             if self.sol.routes[i].cost == self.sol.max_cost_of_route:
-                return (i,self.sol.routes[i])
-       # return [(i,self.sol.routes[i]) if self.sol.routes[i].cost == self.sol.max_cost_of_route else None for i in range(len(self.sol.routes))]
+                return (i, self.sol.routes[i])
+
+    # return [(i,self.sol.routes[i]) if self.sol.routes[i].cost == self.sol.max_cost_of_route else None for i in range(len(self.sol.routes))]
 
     def CalculateMaxCostOfRoute(self):  # sider
         # returns the max cost of the routes in the current solution
@@ -83,7 +87,6 @@ class Combined:
         # )
         return max(route.cost for route in self.sol.routes)  # if the routes costs are correct this will work, else
         # try the commented piece of code
-
 
     def VND(self):
         self.bestSolution = self.cloneSolution(self.sol)
@@ -122,8 +125,7 @@ class Combined:
             if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
                 self.bestSolution = self.cloneSolution(self.sol)
 
-        #SolDrawer.drawTrajectory(self.searchTrajectory)
-
+        # SolDrawer.drawTrajectory(self.searchTrajectory)
 
     def LocalSearch(self, operator):
         self.bestSolution = self.cloneSolution(self.sol)
@@ -135,10 +137,10 @@ class Combined:
 
         while terminationCondition is False:
 
-            self.InitializeOperators(rm,sm)
+            self.InitializeOperators(rm, sm)
             # Relocations
             if operator == 0:
-                self.FindBestRelocationMove(rm)
+                self.find_best_relocation_move(rm)
                 if rm.originRoutePosition is not None:
                     if rm.moveCost < 0:
                         self.ApplyRelocationMove(rm)
@@ -251,7 +253,8 @@ class Combined:
         for originRouteIndex in range(0, len(self.sol.routes)):
             rt1: Route = self.sol.routes[originRouteIndex]
             if rt1 != max_route:
-                for targetRouteIndex in range(0, len(self.sol.routes)):  # Every possible route that the customer can go to
+                for targetRouteIndex in range(0,
+                                              len(self.sol.routes)):  # Every possible route that the customer can go to
                     rt2: Route = self.sol.routes[targetRouteIndex]
                     if rt2 != max_route:
                         for originNodeIndex in range(1,
@@ -296,11 +299,12 @@ class Combined:
                                                                  targetRtCostChange, rm)
 
         return rm.originRoutePosition
+
     def find_best_relocation_move(self, rm):
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         max_route_index = unpack[0]  # unpack index
         for targetRouteIndex in range(0, len(self.sol.routes)):  # Every possible route that the customer can go to
-            find_best_relocation_for_max_route_and_another_route(rm, max_route_index, targetRouteIndex)
+            self.find_best_relocation_for_max_route_and_another_route(rm, max_route_index, targetRouteIndex)
         if rm.originRoutePosition is not None:
             if rm.moveCost < 0:
                 return
@@ -310,15 +314,15 @@ class Combined:
             for targetRouteIndex in range(0, len(self.sol.routes)):  # Every possible route that the customer can go to
                 if targetRouteIndex == max_route_index:
                     continue
-                find_best_relocation_for_two_routes_not_max_route(rm, originRouteIndex, targetRouteIndex)
-
-
+                self.find_best_relocation_for_two_routes_not_max_route(rm, originRouteIndex, targetRouteIndex)
 
     def find_best_relocation_for_max_route_and_another_route(self, relocation_move, max_route_index, route2_index):
         max_route: Route = self.sol.routes[max_route_index]
         route2: Route = self.sol.routes[route2_index]
-        for originNodeIndex in range(1, len(max_route.sequenceOfNodes) - 1):  # The position of the customer that will depart
-            for targetNodeIndex in range(0, len(route2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
+        for originNodeIndex in range(1, len(
+                max_route.sequenceOfNodes) - 1):  # The position of the customer that will depart
+            for targetNodeIndex in range(0, len(
+                    route2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
 
                 if max_route_index == route2_index and \
                         (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
@@ -338,36 +342,40 @@ class Combined:
                         continue
 
                 max_route_cost_change = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
-                                     self.time_matrix[B.ID][
-                                         C.ID]  # Origin route Cost Change (route with max cost)
+                                        self.time_matrix[B.ID][
+                                            C.ID]  # Origin route Cost Change (route with max cost)
                 route2_cost_change = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
                                      self.time_matrix[F.ID][G.ID]  # Target route Cost Change
 
                 if max_route_index != route2_index:  # If the routes are diferrent
-                    if (max_route_index.cost + originRtCostChange) > (route2.cost + targetRtCostChange):  # if the max route is
+                    if (max_route.cost + max_route_cost_change) > (
+                            route2.cost + route2_cost_change):  # if the max route is
                         # has still bigger
                         # cost or the other
                         # route with the new
                         # node has bigger cost
-                        move_cost = max_route_cost_change # move cost if max route has bigger cost
+                        move_cost = max_route_cost_change  # move cost if max route has bigger cost
                     else:
                         move_cost = route2.cost + route2_cost_change - self.sol.max_cost_of_route  # move cost if the other route has bigger cost
                 else:  # If the routes are same
                     move_cost = max_route_cost_change + route2_cost_change  # move cost is the difference from the old cost
 
-                if (move_cost < relocation_move.moveCost) and\
-                        abs(moveCost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
+                if (move_cost < relocation_move.moveCost) and \
+                        abs(
+                            move_cost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
                     self.StoreBestRelocationMove(max_route_index, route2_index, originNodeIndex,
                                                  targetNodeIndex, move_cost, max_route_cost_change,
                                                  route2_cost_change, relocation_move)
 
     def find_best_relocation_for_two_routes_not_max_route(self, relocation_move, route1_index, route2_index):
-        route1: Route = self.sol.routes[route1_index_index]
+        route1: Route = self.sol.routes[route1_index]
         route2: Route = self.sol.routes[route2_index]
-        for originNodeIndex in range(1, len(route1.sequenceOfNodes) - 1):  # The position of the customer that will depart
-            for targetNodeIndex in range(0, len(route2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
+        for originNodeIndex in range(1,
+                                     len(route1.sequenceOfNodes) - 1):  # The position of the customer that will depart
+            for targetNodeIndex in range(0, len(
+                    route2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
 
-                if route1_index == route2_index and\
+                if route1_index == route2_index and \
                         (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
                     # If the relocation will be done on the same Route
                     # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
@@ -391,13 +399,14 @@ class Combined:
                                      self.time_matrix[F.ID][G.ID]  # Target route Cost Change
 
                 if (route1.cost + route1_cost_change > self.sol.max_cost_of_route or
-                    route2.cost + route2_cost_change > self.sol.max_cost_of_route) :
+                        route2.cost + route2_cost_change > self.sol.max_cost_of_route):
                     continue
-                
+
                 move_cost = route1_cost_change + route2_cost_change  # move cost is the difference from the old cost
 
                 if (move_cost < relocation_move.moveCost) \
-                        and abs(moveCost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
+                        and abs(
+                    move_cost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
                     self.StoreBestRelocationMove(route1_index, route2_index, originNodeIndex,
                                                  targetNodeIndex, move_cost, route1_cost_change,
                                                  route2_cost_change, relocation_move)
@@ -448,7 +457,7 @@ class Combined:
         rm.costChangeTargetRt = targetRtCostChange
         rm.moveCost = moveCost
 
-    def InitializeOperators(self, rm,sm):
+    def InitializeOperators(self, rm, sm):
         rm.Initialize()
         sm.Initialize()
 
@@ -459,7 +468,7 @@ class Combined:
         nodes_serviced = 0
         for r in range(0, len(self.sol.routes)):
             rt: Route = self.sol.routes[r]
-            nodes_serviced += len(rt.sequenceOfNodes) - 2 # -2 because we remove depot that exist twice in every route
+            nodes_serviced += len(rt.sequenceOfNodes) - 2  # -2 because we remove depot that exist twice in every route
             rt_cost = 0
             rt_load = 0
             for n in range(0, len(rt.sequenceOfNodes) - 1):
@@ -483,13 +492,15 @@ class Combined:
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         firstRouteIndex = unpack[0]  # unpack index
         rt1 = unpack[1]  # unpack Route
-        for secondRouteIndex in range(firstRouteIndex, len(self.sol.routes)):  # for every route that has not been checked for the first root
+        for secondRouteIndex in range(firstRouteIndex, len(
+                self.sol.routes)):  # for every route that has not been checked for the first root
             rt2: Route = self.sol.routes[secondRouteIndex]  # the route from which a node will be swapped
             for firstNodeIndex in range(1, len(rt1.sequenceOfNodes) - 1):  # for every node of the first route
                 startOfSecondNodeIndex = 1  # start index for the second route
-                if rt1 == rt2:  #if the routes are the same
+                if rt1 == rt2:  # if the routes are the same
                     startOfSecondNodeIndex = firstNodeIndex + 1  # start one node forward to avoid checking the same ones
-                for secondNodeIndex in range(startOfSecondNodeIndex, len(rt2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
+                for secondNodeIndex in range(startOfSecondNodeIndex, len(
+                        rt2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
 
                     # nodes of the first route
                     a1 = rt1.sequenceOfNodes[firstNodeIndex - 1]
@@ -544,16 +555,19 @@ class Combined:
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         max_route = unpack[1]  # unpack Route
         for firstRouteIndex in range(0, len(self.sol.routes)):
-            rt1:Route = self.sol.routes[firstRouteIndex]
+            rt1: Route = self.sol.routes[firstRouteIndex]
             if rt1 != max_route:
-                for secondRouteIndex in range(firstRouteIndex, len(self.sol.routes)):  # for every route that has not been checked for the first root
+                for secondRouteIndex in range(firstRouteIndex, len(
+                        self.sol.routes)):  # for every route that has not been checked for the first root
                     rt2: Route = self.sol.routes[secondRouteIndex]  # the route from which a node will be swapped
                     if rt2 != max_route:
-                        for firstNodeIndex in range(1, len(rt1.sequenceOfNodes) - 1):  # for every node of the first route
+                        for firstNodeIndex in range(1,
+                                                    len(rt1.sequenceOfNodes) - 1):  # for every node of the first route
                             startOfSecondNodeIndex = 1  # start index for the second route
-                            if rt1 == rt2:  #if the routes are the same
+                            if rt1 == rt2:  # if the routes are the same
                                 startOfSecondNodeIndex = firstNodeIndex + 1  # start one node forward to avoid checking the same ones
-                            for secondNodeIndex in range(startOfSecondNodeIndex, len(rt2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
+                            for secondNodeIndex in range(startOfSecondNodeIndex, len(
+                                    rt2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
 
                                 # nodes of the first route
                                 a1 = rt1.sequenceOfNodes[firstNodeIndex - 1]
@@ -599,7 +613,8 @@ class Combined:
 
                                     moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                                 if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
-                                    self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex,
+                                    self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex,
+                                                           secondNodeIndex,
                                                            moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
     def ApplySwapMove(self, sm):
@@ -620,7 +635,6 @@ class Combined:
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
         self.TestSolution()
-
 
     def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost,
                           costChangeFirstRoute, costChangeSecondRoute, sm):
