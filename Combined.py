@@ -167,7 +167,13 @@ class Combined:
                         self.ApplySwapMove(sm)
                     else:
                         terminationCondition = True
-
+            elif operator == 4:
+                self.find_best_swap_move_max_and_other(sm)
+                if sm.positionOfFirstRoute is not None:
+                    if sm.moveCost < 0:
+                        self.ApplySwapMove(sm)
+                    else:
+                        terminationCondition = True
             self.TestSolution()
 
             if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
@@ -300,7 +306,7 @@ class Combined:
 
         return rm.originRoutePosition
 
-    def find_best_relocation_move(self, rm):
+    def find_best_relocation_move_max_and_other(self, rm):
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         max_route_index = unpack[0]  # unpack index
         for targetRouteIndex in range(0, len(self.sol.routes)):  # Every possible route that the customer can go to
@@ -488,6 +494,13 @@ class Combined:
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
 
+    def find_best_swap_move_max_and_other(self, sm):
+        FindBestSwapMove(self, sm)
+        if sm.originRoutePosition is not None:
+            if sm.moveCost < 0:
+                return
+        FindBestSwapMove2(sm)
+
     def FindBestSwapMove(self, sm):  # mo
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         firstRouteIndex = unpack[0]  # unpack index
@@ -610,6 +623,10 @@ class Combined:
 
                                     costChangeFirstRoute = costAdded1 - costRemoved1
                                     costChangeSecondRoute = costAdded2 - costRemoved2
+
+                                    if (rt1.cost + costChangeFirstRoute > self.sol.max_cost_of_route or
+                                            rt2.cost + costChangeSecondRoute > self.sol.max_cost_of_route):
+                                        continue
 
                                     moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                                 if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
