@@ -63,7 +63,7 @@ class TwoOptMoveImplication:
 
         while terminationCondition is False:
             top.Initialize()
-            #SolDrawer.draw(localSearchIterator, self.sol, self.allNodes)
+            SolDrawer.draw(localSearchIterator, self.sol, self.allNodes)
             if operator == 2:
                 self.FindBestTwoOptMove(top)
                 if top.positionOfFirstRoute is not None:
@@ -72,7 +72,8 @@ class TwoOptMoveImplication:
                     else:
                         terminationCondition = True
             self.TestSolution()
-            self.ReportSolution(self.sol)
+            #self.ReportSolution(self.sol)
+
 
             if (self.sol.max_cost_of_route <= self.bestSolution.max_cost_of_route):
                 self.bestSolution = self.cloneSolution(self.sol)
@@ -106,47 +107,138 @@ class TwoOptMoveImplication:
         cloned.max_cost_of_route = self.sol.max_cost_of_route
         return cloned
 
-    def FindBestTwoOptMove(self,top):  # spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
-        #for rtInd1 in range(0, len(self.sol.routes)):
-        max_route_cost = self.CalculateMaxCostOfRoute()
-        rtInd1, rt1 = self.FindRouteWithMaxCost()
-        #rt1: Route = self.sol.routes[rtInd1]  # initialization of index 1 (starting node of intersection)
+    def FindBestTwoOptMove(self,top):
+        rtInd_max, rt_max = self.FindRouteWithMaxCost()
         for rtInd2 in range(0, len(self.sol.routes)):
-            rt2: Route = self.sol.routes[rtInd2]  # initialization of index 2 (landing node after resolving intersection)
-            for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):# den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
-                start2 = 0
-                if (rt1 == rt2):
-                    start2 = nodeInd1 + 2  # landing point must be at least 2 positions after starting point
+            self.FindBestTwoOptMove_MaxRoute(top, rtInd_max, rtInd2)
+        if top.positionOfFirstRoute is not None:
+            if top.moveCost < 0:
+                return
+        for rtInd1 in range(0, len(self.sol.routes)):
+            if rtInd1 == rtInd_max:
+                continue
+            for rtInd2 in range(0, len(self.sol.routes)):
+                if rtInd2 == rtInd_max:
+                    continue
+                self.FindBestTwoOptMove_notMaxRoute(top, rtInd1, rtInd2)
 
-                for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
-                    moveCost = 10 ** 9
+    def FindBestTwoOptMove_MaxRoute(self,top, rtInd1, rtInd2):  # spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
+        rt1: Route = self.sol.routes[rtInd1]
+        rt2: Route = self.sol.routes[rtInd2]
+        route_max = self.CalculateMaxCostOfRoute()
+        route1_current_cost = 0  # the current cost of the route based on the loop (0,A,B------
+        for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):# den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
+            route2_current_cost = 0
+            one = rt1.sequenceOfNodes[nodeInd1 - 1]
+            two = rt1.sequenceOfNodes[nodeInd1]
+            route1_current_cost += self.time_matrix[one.ID][two.ID]  # adding to current route cost
+            start2 = 0
+            if (rt1 == rt2):
+                start2 = nodeInd1 + 2  # landing point must be at least 2 positions after starting point
 
-                    A = rt1.sequenceOfNodes[nodeInd1]  # the starting node of the intersection
-                    B = rt1.sequenceOfNodes[nodeInd1 + 1]  # the next node of the starting node
-                    K = rt2.sequenceOfNodes[nodeInd2]  # the node that we land to continue the sequence after resolving the intersection
-                    L = rt2.sequenceOfNodes[nodeInd2 + 1]  # the next node of node K
+            for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
+                three = rt2.sequenceOfNodes[nodeInd2 - 1]
+                four = rt2.sequenceOfNodes[nodeInd2]
+                route2_current_cost += self.time_matrix[three.ID][four.ID]
+                moveCost = 10 ** 9
 
-                    if rt1 == rt2:
-                        if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
-                            continue
-                        costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
-                        costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
-                        moveCost = costAdded - costRemoved
+                A = rt1.sequenceOfNodes[nodeInd1]  # the starting node of the intersection
+                B = rt1.sequenceOfNodes[nodeInd1 + 1]  # the next node of the starting node
+                K = rt2.sequenceOfNodes[nodeInd2]  # the node that we land to continue the sequence after resolving the intersection
+                L = rt2.sequenceOfNodes[nodeInd2 + 1]  # the next node of node K
 
-                    else:
-                        if nodeInd1 == 0 and nodeInd2 == 0:
-                            continue
-                        if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
-                            continue
+                if rt1 == rt2:
+                    if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
+                        continue
+                    costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
+                    costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
+                    moveCost = costAdded - costRemoved
 
-                        if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
-                            continue
+                else:
+                    if nodeInd1 == 0 and nodeInd2 == 0:
+                        continue
+                    if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
+                        continue
 
-                        moveCost = self.RouteCostCheck(rt1, rt2, nodeInd1, nodeInd2)
+                    if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                        continue
 
-                    if moveCost < top.moveCost and abs(moveCost) > 0.0001:
-                        # compares current move cost with best move cost at the time and stores best
-                        self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
+                    rt1_cost = route1_current_cost + self.time_matrix[A.ID][L.ID] + rt2.cost - route2_current_cost - \
+                               self.time_matrix[K.ID][L.ID]
+                    rt2_cost = route2_current_cost + self.time_matrix[B.ID][K.ID] + rt1.cost - route1_current_cost - \
+                               self.time_matrix[A.ID][B.ID]
+
+                    if rt1_cost < route_max and rt2_cost < route_max:
+                        if rt1_cost > rt2_cost:
+                            moveCost = rt1_cost - route_max
+                        else:
+                            moveCost = rt2_cost - route_max
+
+                if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                    # compares current move cost with best move cost at the time and stores best
+                    self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
+
+
+
+    def FindBestTwoOptMove_notMaxRoute(self, top, rtInd1, rtInd2):  # spy + mark ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
+        rt1: Route = self.sol.routes[rtInd1]
+        rt2: Route = self.sol.routes[rtInd2]
+        route_max = self.CalculateMaxCostOfRoute()
+        route1_current_cost = 0 # the current cost of the route based on the loop (0,A,B------
+        route2_current_cost = 0 # the current cost of the route based on the loop (0,K,L------
+        for nodeInd1 in range(1, len(rt1.sequenceOfNodes) - 1): # den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
+            route2_current_cost = 0
+            one = rt1.sequenceOfNodes[nodeInd1-1]
+            two = rt1.sequenceOfNodes[nodeInd1]
+            route1_current_cost += self.time_matrix[one.ID][two.ID]  # adding to current route cost
+            start2 = 1
+            if (rt1 == rt2):
+                start2 = nodeInd1 + 2  # landing point must be at least 2 positions after starting point
+
+            for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
+                three = rt2.sequenceOfNodes[nodeInd2-1]
+                four = rt2.sequenceOfNodes[nodeInd2]
+                route2_current_cost += self.time_matrix[three.ID][four.ID]
+                moveCost = 10 ** 9
+
+                A = rt1.sequenceOfNodes[nodeInd1]  # the starting node of the intersection
+                B = rt1.sequenceOfNodes[nodeInd1 + 1]  # the next node of the starting node
+                K = rt2.sequenceOfNodes[nodeInd2]  # the node that we land to continue the sequence after resolving the intersection
+                L = rt2.sequenceOfNodes[nodeInd2 + 1]  # the next node of node K
+
+                if rt1 == rt2:
+                    if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
+                        continue
+                    costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
+                    costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
+                    moveCost = costAdded - costRemoved
+
+                else:
+                    if nodeInd1 == 0 and nodeInd2 == 0:
+                        continue
+                    if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
+                        continue
+
+                    if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                        continue
+
+                    rt1_cost = route1_current_cost + self.time_matrix[A.ID][L.ID] + rt2.cost - route2_current_cost - \
+                               self.time_matrix[K.ID][L.ID]
+                    rt2_cost = route2_current_cost + self.time_matrix[B.ID][K.ID] + rt1.cost - route1_current_cost - \
+                               self.time_matrix[A.ID][B.ID]
+
+                    if rt1_cost >= route_max or rt2_cost >= route_max:
+                         continue
+
+                    costAdded = self.time_matrix[A.ID][L.ID] + self.time_matrix[B.ID][K.ID]
+                    costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
+                    moveCost = costAdded - costRemoved
+
+                if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                    # compares current move cost with best move cost at the time and stores best
+                    self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
+
+
 
     def CapacityIsViolated(self, rt1, nodeInd1, rt2, nodeInd2):
         rt1FirstSegmentLoad = 0
@@ -187,10 +279,37 @@ class TwoOptMoveImplication:
         max_cost_route = self.CalculateMaxCostOfRoute()
 
         if rt1.cost < max_cost_route and rt2.cost < max_cost_route:
-            move_cost = rt1.cost - max_cost_route
-            return move_cost
+            if rt1.cost > rt2.cost:
+                move_cost = rt1.cost - max_cost_route
+                return move_cost
+            else:
+                move_cost = rt2.cost - max_cost_route
+                return move_cost
         else:
             return 10*9
+
+    def RouteCostCheck_notMax(self, rtInd1, rtInd2, nodeInd1, nodeInd2):
+        rt1 = self.cloneRoute(rtInd1)
+        rt2 = self.cloneRoute(rtInd2)
+        relocatedSegmentOfRt1 = rt1.sequenceOfNodes[nodeInd1 + 1:]
+
+        # slice with the nodes from position top.positionOfFirstNode + 1 onwards
+        relocatedSegmentOfRt2 = rt2.sequenceOfNodes[nodeInd2 + 1:]
+
+        del rt1.sequenceOfNodes[nodeInd1 + 1:]
+        del rt2.sequenceOfNodes[nodeInd2 + 1:]
+
+        rt1.sequenceOfNodes.extend(relocatedSegmentOfRt2)
+        rt2.sequenceOfNodes.extend(relocatedSegmentOfRt1)
+
+        self.UpdateRouteCostAndLoad(rt1)
+        self.UpdateRouteCostAndLoad(rt2)
+        max_cost_route = self.CalculateMaxCostOfRoute()
+
+        if rt1.cost > max_cost_route or rt2.cost > max_cost_route:
+            return True
+        else:
+            return False
 
 
 
@@ -274,3 +393,120 @@ class TwoOptMoveImplication:
                   ' calculated cost: ' + str(self.CalculateMaxCostOfRoute()))
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
+
+            def find_best_relocation_move_max_and_other(self,
+                                                        rm):  # relocations in both max route and other routes without
+                # increasing max_cost
+                unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
+                max_route_index = unpack[0]  # unpack index
+                for targetRouteIndex in range(0,
+                                              len(self.sol.routes)):  # Every possible route that the customer can go to
+                    self.find_best_relocation_for_max_route_and_another_route(rm, max_route_index, targetRouteIndex)
+                if rm.originRoutePosition is not None:
+                    if rm.moveCost < 0:
+                        return
+                for originRouteIndex in range(0, len(self.sol.routes)):
+                    if originRouteIndex == max_route_index:
+                        continue
+                    for targetRouteIndex in range(0, len(
+                            self.sol.routes)):  # Every possible route that the customer can go to
+                        if targetRouteIndex == max_route_index:
+                            continue
+                        self.find_best_relocation_for_two_routes_not_max_route(rm, originRouteIndex, targetRouteIndex)
+
+            def find_best_relocation_for_max_route_and_another_route(self, relocation_move, max_route_index,
+                                                                     route2_index):
+                max_route: Route = self.sol.routes[max_route_index]
+                route2: Route = self.sol.routes[route2_index]
+                for originNodeIndex in range(1, len(
+                        max_route.sequenceOfNodes) - 1):  # The position of the customer that will depart
+                    for targetNodeIndex in range(0, len(
+                            route2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
+
+                        if max_route_index == route2_index and \
+                                (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
+                            # If the relocation will be done on the same Route
+                            # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
+                            continue
+
+                        A = max_route.sequenceOfNodes[originNodeIndex - 1]
+                        B = max_route.sequenceOfNodes[originNodeIndex]
+                        C = max_route.sequenceOfNodes[originNodeIndex + 1]
+
+                        F = route2.sequenceOfNodes[targetNodeIndex]
+                        G = route2.sequenceOfNodes[targetNodeIndex + 1]
+
+                        if max_route_index != route2_index:  # If the routes are diferrent
+                            if route2.load + B.demand > route2.capacity:  # if the capacity constrains are violated then continue
+                                continue
+
+                        max_route_cost_change = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
+                                                self.time_matrix[B.ID][
+                                                    C.ID]  # Origin route Cost Change (route with max cost)
+                        route2_cost_change = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
+                                             self.time_matrix[F.ID][G.ID]  # Target route Cost Change
+
+                        if max_route_index != route2_index:  # If the routes are diferrent
+                            if (max_route.cost + max_route_cost_change) > (
+                                    route2.cost + route2_cost_change):  # if the max route is
+                                # has still bigger
+                                # cost or the other
+                                # route with the new
+                                # node has bigger cost
+                                move_cost = max_route_cost_change  # move cost if max route has bigger cost
+                            else:
+                                move_cost = route2.cost + route2_cost_change - self.sol.max_cost_of_route  # move cost if the other route has bigger cost
+                        else:  # If the routes are same
+                            move_cost = max_route_cost_change + route2_cost_change  # move cost is the difference from the old cost
+
+                        if (move_cost < relocation_move.moveCost) and \
+                                abs(
+                                    move_cost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
+                            self.StoreBestRelocationMove(max_route_index, route2_index, originNodeIndex,
+                                                         targetNodeIndex, move_cost, max_route_cost_change,
+                                                         route2_cost_change, relocation_move)
+
+            def find_best_relocation_for_two_routes_not_max_route(self, relocation_move, route1_index, route2_index):
+                route1: Route = self.sol.routes[route1_index]
+                route2: Route = self.sol.routes[route2_index]
+                for originNodeIndex in range(1,
+                                             len(
+                                                 route1.sequenceOfNodes) - 1):  # The position of the customer that will depart
+                    for targetNodeIndex in range(0, len(
+                            route2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
+
+                        if route1_index == route2_index and \
+                                (targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
+                            # If the relocation will be done on the same Route
+                            # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
+                            continue
+
+                        A = route1.sequenceOfNodes[originNodeIndex - 1]
+                        B = route1.sequenceOfNodes[originNodeIndex]
+                        C = route1.sequenceOfNodes[originNodeIndex + 1]
+
+                        F = route2.sequenceOfNodes[targetNodeIndex]
+                        G = route2.sequenceOfNodes[targetNodeIndex + 1]
+
+                        if route1_index != route2_index:  # If the routes are diferrent
+                            if route2.load + B.demand > route2.capacity:  # if the capacity constrains are violated then continue
+                                continue
+
+                        route1_cost_change = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
+                                             self.time_matrix[B.ID][
+                                                 C.ID]  # Origin route Cost Change (route with max cost)
+                        route2_cost_change = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
+                                             self.time_matrix[F.ID][G.ID]  # Target route Cost Change
+
+                        if (route1.cost + route1_cost_change >= self.sol.max_cost_of_route or
+                                route2.cost + route2_cost_change >= self.sol.max_cost_of_route):
+                            continue
+
+                        move_cost = route1_cost_change + route2_cost_change  # move cost is the difference from the old cost
+
+                        if (move_cost < relocation_move.moveCost) \
+                                and abs(
+                            move_cost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
+                            self.StoreBestRelocationMove(route1_index, route2_index, originNodeIndex,
+                                                         targetNodeIndex, move_cost, route1_cost_change,
+                                                         route2_cost_change, relocation_move)
