@@ -106,7 +106,7 @@ class Combined:
     def VND(self):
         self.bestSolution = self.cloneSolution(self.sol)
         VNDIterator = 0
-        kmax = 1
+        kmax = 2
         rm = RelocationMove()
         sm = SwapMove()
         top = TwoOptMove()
