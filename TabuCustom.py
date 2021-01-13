@@ -1,7 +1,7 @@
 from VRP_Model import *
 from VRPMinimumInsertions import *
 from SolutionDrawer import *
-import random
+import random,pprint
 
 
 class Solution:
@@ -64,7 +64,6 @@ class TwoOptMove(object):
         self.positionOfSecondNode = None
         self.moveCost = 10 ** 9
 
-
 class TabuCustom:
 
     def __init__(self, minIns):
@@ -79,13 +78,14 @@ class TabuCustom:
         self.bestSolution = None
         self.searchTrajectory = []
         self.bestSolution = None
-        self.minTabuTenure = 10
-        self.maxTabuTenure = 50
+        self.minTabuTenure = 10 #10
+        self.maxTabuTenure = 50 #50
         self.tabuTenure = 20
-
+        self.TabuForbiddenArcs = [[0 for j in range(0,201)] for i in range(0,201)] #Changes to True if the arg [i,j] is Forbidden 
+    
     def solveCombined(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
         # sort the self.customers
-       # self.VND()
+        # self.VND()
         self.TabuSearch(0)
         return self.sol
 
@@ -107,229 +107,6 @@ class TabuCustom:
         # )
         return max(route.cost for route in self.sol.routes)  # if the routes costs are correct this will work, else
         # try the commented piece of code
-
-    def VND(self):
-        self.bestSolution = self.cloneSolution(self.sol)
-        VNDIterator = 0
-        kmax = 2
-        rm = RelocationMove()
-        sm = SwapMove()
-        top = TwoOptMove()
-        k = 0
-        draw = False
-
-        while k <= kmax:
-            self.InitializeOperators(rm, sm,top)
-            if k == 0:
-                # relocations in both max route and other routes without increasing max_cost
-                self.find_best_relocation_move_max_and_other(rm)
-                if rm.originRoutePosition is not None and rm.moveCost < 0:
-                    self.ApplyRelocationMove(rm)
-                    if draw:
-                        SolDrawer.draw(VNDIterator, self.sol, self.allNodes)
-                    VNDIterator = VNDIterator + 1
-                    self.searchTrajectory.append(self.sol.max_cost_of_route)
-                    k = 0
-                else:
-                    k += 1
-            elif k == 1:
-                # swaps in both max route and other routes without increasing max_cost
-                self.find_best_swap_move_max_and_other(sm)
-                if sm.positionOfFirstRoute is not None and sm.moveCost < 0:
-                    self.ApplySwapMove(sm)
-                    if draw:
-                        SolDrawer.draw(VNDIterator, self.sol, self.allNodes)
-                    VNDIterator = VNDIterator + 1
-                    self.searchTrajectory.append(self.sol.max_cost_of_route)
-                    k = 0
-                else:
-                    k += 1
-            elif k == 2:
-                # two opt only in max route
-                self.FindBestTwoOptMove(top)
-                if top.positionOfFirstRoute is not None and top.moveCost < 0:
-                    self.ApplyTwoOptMove(top)
-                    if draw:
-                        SolDrawer.draw(VNDIterator, self.sol, self.allNodes)
-                    VNDIterator = VNDIterator + 1
-                    self.searchTrajectory.append(self.sol.max_cost_of_route)
-                    k = 0
-                else:
-                    k += 1
-
-            if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
-                self.bestSolution = self.cloneSolution(self.sol)
-
-        # SolDrawer.drawTrajectory(self.searchTrajectory)
-
-    def LocalSearch(self, operator):
-        self.bestSolution = self.cloneSolution(self.sol)
-        terminationCondition = False
-        localSearchIterator = 0
-
-        rm = RelocationMove()
-        sm = SwapMove()
-        top = TwoOptMove()
-
-        while terminationCondition is False:
-
-            self.InitializeOperators(rm, sm,top)
-            # Relocations
-            if operator == 0:
-                self.FindBestRelocationMove(rm)
-                if rm.originRoutePosition is not None:
-                    if rm.moveCost < 0:
-                        self.ApplyRelocationMove(rm)
-                    else:
-                        terminationCondition = True
-            elif operator == 1:
-                # Swaps
-                self.FindBestSwapMove(sm)
-                if sm.positionOfFirstRoute is not None:
-                    if sm.moveCost < 0:
-                        self.ApplySwapMove(sm)
-                    else:
-                        terminationCondition = True
-            elif operator == 2:
-                # relocations in both max route and other routes without increasing max_cost
-                self.find_best_relocation_move_max_and_other(rm)
-                if rm.originRoutePosition is not None:
-                    if rm.moveCost < 0:
-                        self.ApplyRelocationMove(rm)
-                    else:
-                        terminationCondition = True
-            elif operator == 3:
-                # swaps in both max route and other routes without increasing max_cost
-                self.find_best_swap_move_max_and_other(sm)
-                if sm.positionOfFirstRoute is not None:
-                    if sm.moveCost < 0:
-                        self.ApplySwapMove(sm)
-                    else:
-                        terminationCondition = True
-            elif operator == 5:
-                # two opt
-                self.FindBestTwoOptMove(top)
-                if top.positionOfFirstRoute is not None:
-                    if top.moveCost < 0:
-                        self.ApplyTwoOptMove(top)
-                    else:
-                        terminationCondition = True
-
-            self.TestSolution()
-
-            if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
-                self.bestSolution = self.cloneSolution(self.sol)
-
-            localSearchIterator = localSearchIterator + 1
-
-        self.sol = self.bestSolution
-
-    def FindBestRelocationMove(self, rm):  # antonopoulos - mo
-        unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
-        originRouteIndex = unpack[0]  # unpack index
-        rt1 = unpack[1]  # unpack Route
-        for targetRouteIndex in range(0, len(self.sol.routes)):  # Every possible route that the customer can go to
-            rt2: Route = self.sol.routes[targetRouteIndex]
-            for originNodeIndex in range(1,
-                                         len(rt1.sequenceOfNodes) - 1):  # The position of the customer that will depart
-                for targetNodeIndex in range(0, len(
-                        rt2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
-
-                    if originRouteIndex == targetRouteIndex and (
-                            targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
-                        # If the relocation will be done on the same Route
-                        # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
-                        continue
-
-                    A = rt1.sequenceOfNodes[originNodeIndex - 1]
-                    B = rt1.sequenceOfNodes[originNodeIndex]
-                    C = rt1.sequenceOfNodes[originNodeIndex + 1]
-
-                    F = rt2.sequenceOfNodes[targetNodeIndex]
-                    G = rt2.sequenceOfNodes[targetNodeIndex + 1]
-
-                    if rt1 != rt2:  # If the routes are diferrent
-                        if rt2.load + B.demand > rt2.capacity:  # if the capacity constrains are violated then continue
-                            continue
-
-                    originRtCostChange = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
-                                         self.time_matrix[B.ID][C.ID]  # Origin route Cost Change (route with max cost)
-                    targetRtCostChange = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
-                                         self.time_matrix[F.ID][G.ID]  # Target route Cost Change
-                    if rt1 != rt2:  # If the routes are diferrent
-                        if (rt1.cost + originRtCostChange) > (rt2.cost + targetRtCostChange):  # if the max route is
-                            # has still bigger
-                            # cost or the other
-                            # route with the new
-                            # node has bigger cost
-                            moveCost = originRtCostChange  # move cost if max route has bigger cost
-                        else:
-                            moveCost = rt2.cost + targetRtCostChange - self.sol.max_cost_of_route  # move cost if the other route has bigger cost
-                    else:  # If the routes are same
-                        costAdded = self.time_matrix[A.ID][C.ID] + self.time_matrix[F.ID][B.ID] + \
-                                    self.time_matrix[B.ID][G.ID]  # cost added in the route
-                        costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[B.ID][C.ID] + \
-                                      self.time_matrix[F.ID][G.ID]  # cost removed from the route
-                        moveCost = costAdded - costRemoved  # move cost is the difference from the old cost
-
-                    if (moveCost < rm.moveCost) and abs(
-                            moveCost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
-                        self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
-                                                     targetNodeIndex, moveCost, originRtCostChange,
-                                                     targetRtCostChange, rm)
-
-    def FindBestRelocationMove2(self, rm):  # changes only in other routes increasing the max cost
-        unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
-        max_route = unpack[1]  # unpack Route
-        for originRouteIndex in range(0, len(self.sol.routes)):
-            rt1: Route = self.sol.routes[originRouteIndex]
-            if rt1 != max_route:
-                for targetRouteIndex in range(0,
-                                              len(self.sol.routes)):  # Every possible route that the customer can go to
-                    rt2: Route = self.sol.routes[targetRouteIndex]
-                    if rt2 != max_route:
-                        for originNodeIndex in range(1,
-                                                     len(
-                                                         rt1.sequenceOfNodes) - 1):  # The position of the customer that will depart
-                            for targetNodeIndex in range(0, len(
-                                    rt2.sequenceOfNodes) - 1):  # Every possible position that the customer can go to
-
-                                if originRouteIndex == targetRouteIndex and (
-                                        targetNodeIndex == originNodeIndex or targetNodeIndex == originNodeIndex - 1):
-                                    # If the relocation will be done on the same Route
-                                    # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
-                                    continue
-
-                                A = rt1.sequenceOfNodes[originNodeIndex - 1]
-                                B = rt1.sequenceOfNodes[originNodeIndex]
-                                C = rt1.sequenceOfNodes[originNodeIndex + 1]
-
-                                F = rt2.sequenceOfNodes[targetNodeIndex]
-                                G = rt2.sequenceOfNodes[targetNodeIndex + 1]
-
-                                if rt1 != rt2:  # If the routes are diferrent
-                                    if rt2.load + B.demand > rt2.capacity:  # if the capacity constrains are violated then continue
-                                        continue
-
-                                originRtCostChange = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
-                                                     self.time_matrix[B.ID][
-                                                         C.ID]  # Origin route Cost Change (route with max cost)
-                                targetRtCostChange = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
-                                                     self.time_matrix[F.ID][G.ID]  # Target route Cost Change
-
-                                costAdded = self.time_matrix[A.ID][C.ID] + self.time_matrix[F.ID][B.ID] + \
-                                            self.time_matrix[B.ID][G.ID]  # cost added in the route
-                                costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[B.ID][C.ID] + \
-                                              self.time_matrix[F.ID][G.ID]  # cost removed from the route
-
-                                moveCost = costAdded - costRemoved  # move cost is the difference from the old cost
-                                if (moveCost < rm.moveCost) and abs(
-                                        moveCost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
-                                    self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
-                                                                 targetNodeIndex, moveCost, originRtCostChange,
-                                                                 targetRtCostChange, rm)
-
-        return rm.originRoutePosition
 
     def find_best_relocation_move_max_and_other(self, rm,localSearchIterator):  # relocations in both max route and other routes without
                                                             # increasing max_cost
@@ -368,7 +145,9 @@ class TabuCustom:
 
                 F = route2.sequenceOfNodes[targetNodeIndex]
                 G = route2.sequenceOfNodes[targetNodeIndex + 1]
-
+              #  print("ORISMA:F:",F.ID,"G:",G.ID)
+                # print(max_route.sequenceOfNodes)
+                # print(route2.sequenceOfNodes)
                 if max_route_index != route2_index:  # If the routes are diferrent
                     if route2.load + B.demand > route2.capacity:  # if the capacity constrains are violated then continue
                         continue
@@ -391,13 +170,16 @@ class TabuCustom:
                 else:  # If the routes are same
                     move_cost = max_route_cost_change + route2_cost_change  # move cost is the difference from the old cost
 
-                if (self.MoveIsTabu(B, localSearchIterator, move_cost)):
+                if (self.MoveIsTabu2(F,B,G, localSearchIterator, move_cost)):
                     continue
 
 
                 if (move_cost < relocation_move.moveCost) and \
                         abs(
                             move_cost) > 0.0001:  # if the profit is better than the profit that we've already found in the loop
+                    # print("ROUTE22222222222",max_route_index, route2_index, originNodeIndex,
+                    #                              targetNodeIndex, move_cost, max_route_cost_change,
+                    #                              route2_cost_change, relocation_move)
                     self.StoreBestRelocationMove(max_route_index, route2_index, originNodeIndex,
                                                  targetNodeIndex, move_cost, max_route_cost_change,
                                                  route2_cost_change, relocation_move)
@@ -422,7 +204,9 @@ class TabuCustom:
 
                 F = route2.sequenceOfNodes[targetNodeIndex]
                 G = route2.sequenceOfNodes[targetNodeIndex + 1]
-
+                # print("ORISMA:F:",F.ID,"G:",G.ID)
+                # print(route1.sequenceOfNodes)
+                # print(route2.sequenceOfNodes)
                 if route1_index != route2_index:  # If the routes are diferrent
                     if route2.load + B.demand > route2.capacity:  # if the capacity constrains are violated then continue
                         continue
@@ -434,8 +218,9 @@ class TabuCustom:
                                      self.time_matrix[F.ID][G.ID]  # Target route Cost Change
 
                 move_cost = route1_cost_change + route2_cost_change  # move cost is the difference from the old cost
-                if (self.MoveIsTabu(B, localSearchIterator, move_cost)):
-                            continue
+                
+                if (self.MoveIsTabu2(F,B,G, localSearchIterator, move_cost)):
+                    continue
                 
                 if (move_cost < relocation_move.moveCost) \
                         and abs(
@@ -445,15 +230,18 @@ class TabuCustom:
                                                  route2_cost_change, relocation_move)
 
     def ApplyRelocationMove(self, rm: RelocationMove,localSearchIterator):
-
+        print(rm.originRoutePosition, rm.targetRoutePosition, rm.originNodePosition, rm.targetNodePosition)
+        # print("hgjygcjyugcfjy",rm.originRoutePosition, rm.targetRoutePosition, rm.originNodePosition, rm.targetNodePosition)
         originRt = self.sol.routes[rm.originRoutePosition]  # origin route of the node to be relocated
         targetRt = self.sol.routes[rm.targetRoutePosition]  # target route of the node to be relocated
-
-        B = originRt.sequenceOfNodes[rm.originNodePosition]  # the Node object to be relocated
-
+        
+        A = originRt.sequenceOfNodes[rm.originNodePosition-1] # the node before B
+        B = originRt.sequenceOfNodes[rm.originNodePosition]   # the Node object to be relocated
+        C = originRt.sequenceOfNodes[rm.originNodePosition+1] # the node before B
+        print(self.TabuForbiddenArcs[A.ID][B.ID])
         if originRt == targetRt:  # If the routes are same
             del originRt.sequenceOfNodes[rm.originNodePosition]  # delete the node from it's previous place
-            if rm.originNodePosition < rm.targetNodePosition:  # if the origin node is previous from the target node in the sequence
+            if rm.originNodePosition < rm.targetNodePosition:    # if the origin node is previous from the target node in the sequence
                 targetRt.sequenceOfNodes.insert(rm.targetNodePosition,
                                                 B)  # relocate the node at the target's node index
             else:
@@ -476,10 +264,12 @@ class TabuCustom:
             targetRt.load += B.demand
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
-        self.SetTabuIterator(B, localSearchIterator)
-
+        self.SetTabuForRelocations(A,B,C, localSearchIterator)
+        print("check",self.TabuForbiddenArcs[A.ID][B.ID])
         self.TestSolution()
+    #    print("Relocation move",A.ID,B.ID,C.ID,originRt.sequenceOfNodes,targetRt.sequenceOfNodes)
 
+        
     def StoreBestRelocationMove(self, originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost,
                                 originRtCostChange, targetRtCostChange, rm: RelocationMove):
         # store the data for the relocation move
@@ -558,7 +348,10 @@ class TabuCustom:
                             moveCost = costChangeFirstRoute
                         else:
                             moveCost = route2.cost + costChangeSecondRoute - self.sol.max_cost_of_route
-                    if self.MoveIsTabu(b1, localSearchIterator, moveCost) or self.MoveIsTabu(b2, localSearchIterator, moveCost):
+                    #METHOD 
+
+                    #METHOD
+                    if self.MoveIsTabuForSwaps(a1.ID,b1.ID,c1.ID,a2.ID,b2.ID,c2.ID, localSearchIterator, moveCost) :
                         continue
                     if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
                         self.StoreBestSwapMove(max_route_index, route2_index, firstNodeIndex, secondNodeIndex,
@@ -627,7 +420,7 @@ class TabuCustom:
                                    
 
                                     moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                                if self.MoveIsTabu(b1, localSearchIterator, moveCost) or self.MoveIsTabu(b2, localSearchIterator, moveCost):
+                                if self.MoveIsTabuForSwaps(a1.ID,b1.ID,c1.ID,a2.ID,b2.ID,c2.ID, localSearchIterator, moveCost) :
                                     continue
                                 if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
                                     self.StoreBestSwapMove(route1_index, route2_index, firstNodeIndex,
@@ -635,13 +428,22 @@ class TabuCustom:
                                                            moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
     def ApplySwapMove(self, sm,localSearchIterator):
+        
         rt1 = self.sol.routes[sm.positionOfFirstRoute]
         rt2 = self.sol.routes[sm.positionOfSecondRoute]
+        
+        a1 = rt1.sequenceOfNodes[sm.positionOfFirstNode-1]
         b1 = rt1.sequenceOfNodes[sm.positionOfFirstNode]
+        c1 = rt1.sequenceOfNodes[sm.positionOfFirstNode+1]
+       
+        a2 = rt2.sequenceOfNodes[sm.positionOfSecondNode-1]
         b2 = rt2.sequenceOfNodes[sm.positionOfSecondNode]
+        c2 = rt2.sequenceOfNodes[sm.positionOfSecondNode+1]
+
         rt1.sequenceOfNodes[sm.positionOfFirstNode] = b2
         rt2.sequenceOfNodes[sm.positionOfSecondNode] = b1
 
+        
         if (rt1 == rt2):
             rt1.cost += sm.moveCost
         else:
@@ -651,10 +453,9 @@ class TabuCustom:
             rt2.load = rt2.load + b1.demand - b2.demand
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
-        self.SetTabuIterator(b1, localSearchIterator)
-        self.SetTabuIterator(b2, localSearchIterator)
+        self.SetTabuIteratorForSwaps(a1.ID,b1.ID,c1.ID,a2.ID,b2.ID,c2.ID, localSearchIterator)
         self.TestSolution()
-
+        print("Swap Move",b1.ID,b2.ID)
     def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost,
                           costChangeFirstRoute, costChangeSecondRoute, sm):
         sm.positionOfFirstRoute = firstRouteIndex
@@ -876,7 +677,7 @@ class TabuCustom:
         SolDrawer.draw(0, self.sol, self.allNodes)
 
         while terminationCondition is False:
-            operator = random.randint(0,3)
+            operator = random.randint(0,0)
 
             rm.Initialize()
             sm.Initialize()
@@ -901,7 +702,7 @@ class TabuCustom:
             self.TestSolution()
             solution_cost_trajectory.append(self.sol.max_cost_of_route)
 
-            print(localSearchIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
+    #        print(localSearchIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
 
             if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
                 self.bestSolution = self.cloneSolution(self.sol)
@@ -912,7 +713,6 @@ class TabuCustom:
 
             if localSearchIterator > 5000:
                 terminationCondition = True
-
         SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
         SolDrawer.drawTrajectory(solution_cost_trajectory)
 
@@ -921,10 +721,48 @@ class TabuCustom:
     def MoveIsTabu(self, n: Node, iterator, moveCost):
         if moveCost + self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route - 0.001:
             return False
-        if iterator < n.isTabuTillIterator:
+        if iterator < n.isTabuTillIterator: 
             return True
         return False        
+
+    def MoveIsTabu2(self, F: Node,B: Node,G: Node, iterator, moveCost):
+        # print("TargetBefore B:",F.ID," B:",B.ID)
+        # print("B:",B.ID," Target after B:",G.ID)
+        if moveCost + self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route - 0.001:
+            return False
+        if (self.TabuForbiddenArcs[F.ID][B.ID] > iterator) or (self.TabuForbiddenArcs[B.ID][G.ID] > iterator):
+            return True
+        return False        
+
 
     def SetTabuIterator(self, n: Node, iterator):
         # n.isTabuTillIterator = iterator + self.tabuTenure
         n.isTabuTillIterator = iterator + random.randint(self.minTabuTenure, self.maxTabuTenure)
+    
+    def SetTabuForRelocations(self,A: Node,B: Node,C: Node, iterator): #used to take 3 arguments 
+        x=random.randint(self.minTabuTenure, self.maxTabuTenure)
+        
+        self.TabuForbiddenArcs[A.ID][B.ID] = iterator + x
+        self.TabuForbiddenArcs[B.ID][C.ID] = iterator + x
+     #   print(self.TabuForbiddenArcs)
+
+        # print("A:",A.ID," B:",B.ID)
+        # print("B:",B.ID," C:",C.ID) 
+
+    def MoveIsTabuForSwaps(self,a1ID,b1ID,c1ID,a2ID,b2ID,c2ID,iterator,moveCost):
+        if moveCost + self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route - 0.001:
+            return False
+            #iterator = 30 
+        if (self.TabuForbiddenArcs[a1ID][b2ID] > iterator) or (self.TabuForbiddenArcs[b2ID][c1ID] > iterator) or (self.TabuForbiddenArcs[a2ID][b1ID] > iterator) or (self.TabuForbiddenArcs[b1ID][c2ID] > iterator):
+            #self.TabuForbiddenArcs[a1ID][b1ID] > iterator : IS TRUE IF ARG IS TABOOED 
+            return True
+        return False    
+
+    def SetTabuIteratorForSwaps(self,a1ID,b1ID,c1ID,a2ID,b2ID,c2ID, iterator):
+      #  print(self.TabuForbiddenArcs[a1ID][b1ID]) 
+        x=random.randint(self.minTabuTenure, self.maxTabuTenure)
+        self.TabuForbiddenArcs[a1ID][b1ID] = iterator + x
+        self.TabuForbiddenArcs[b1ID][c1ID] = iterator + x
+        self.TabuForbiddenArcs[a2ID][b2ID] = iterator + x
+        self.TabuForbiddenArcs[b2ID][c2ID] = iterator + x
+         
