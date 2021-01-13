@@ -734,8 +734,12 @@ class Combined:
         max_cost_route = self.CalculateMaxCostOfRoute()
 
         if rt1.cost < max_cost_route and rt2.cost < max_cost_route:
-            move_cost = rt1.cost - max_cost_route
-            return move_cost
+            if rt1.cost > rt2.cost:
+                move_cost = rt1.cost - max_cost_route
+                return move_cost
+            else:
+                move_cost = rt2.cost - max_cost_route
+                return move_cost
         else:
             return 10*9
 
