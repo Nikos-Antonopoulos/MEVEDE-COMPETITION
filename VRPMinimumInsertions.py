@@ -1,8 +1,9 @@
 from VRP_Model import *
 from SolutionDrawer import *
 import random
-from Relocations import *
-from Swaps import *
+from Combined import *
+# from Relocations import *
+# from Swaps import *
 
 class Solution:
     def __init__(self): #sider
@@ -43,11 +44,14 @@ class SolverMinIns:
         self.SetRoutedFlagToFalseForAllCustomers()
         self.minimum_insertions_with_opened_routes(with_sort)
         print("start", self.sol.max_cost_of_route)
-        swap = Swaps(self)
-        swap.solveSwaps()
-        print("swaps", self.sol.max_cost_of_route)
-        reloc = Relocations(self)
-        reloc.solveRelocations()
+        # swap = Swaps(self)
+        # swap.solveSwaps()
+        # print("swaps", self.sol.max_cost_of_route)
+        # reloc = Relocations(self)
+        # reloc.solveRelocations()
+        combined = Combined(self)
+        combined.VND()
+
 
 
         # self.ReportSolution(self.sol)

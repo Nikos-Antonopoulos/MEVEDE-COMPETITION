@@ -48,6 +48,7 @@ class Swaps:
         # function returning the route with the maximum cost and its index in the list of routes
         for i in range(len(self.sol.routes)):
             if self.sol.routes[i].cost == self.sol.max_cost_of_route:
+                print(i)
                 return (i,self.sol.routes[i])
        # return [(i,self.sol.routes[i]) if self.sol.routes[i].cost == self.sol.max_cost_of_route else None for i in range(len(self.sol.routes))]
 

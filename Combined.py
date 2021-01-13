@@ -117,7 +117,6 @@ class Combined:
             self.InitializeOperators(rm, sm,top)
             if k == 0:
                 self.find_best_relocation_move_max_and_other(rm)
-                print(rm.moveCost,rm.originRoutePosition,rm.originNodePosition,rm.targetNodePosition,rm.targetRoutePosition)
                 if rm.originRoutePosition is not None and rm.moveCost < 0:
                     self.ApplyRelocationMove(rm)
                     if draw:
@@ -441,8 +440,8 @@ class Combined:
                 route2_cost_change = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
                                      self.time_matrix[F.ID][G.ID]  # Target route Cost Change
 
-                if (route1.cost + route1_cost_change > self.sol.max_cost_of_route or
-                        route2.cost + route2_cost_change > self.sol.max_cost_of_route):
+                if (route1.cost + route1_cost_change >= self.sol.max_cost_of_route or
+                        route2.cost + route2_cost_change >= self.sol.max_cost_of_route):
                     continue
 
                 move_cost = route1_cost_change + route2_cost_change  # move cost is the difference from the old cost
@@ -662,8 +661,8 @@ class Combined:
                                     costChangeFirstRoute = costAdded1 - costRemoved1
                                     costChangeSecondRoute = costAdded2 - costRemoved2
 
-                                    if (rt1.cost + costChangeFirstRoute > self.sol.max_cost_of_route or
-                                            rt2.cost + costChangeSecondRoute > self.sol.max_cost_of_route):
+                                    if (rt1.cost + costChangeFirstRoute >= self.sol.max_cost_of_route or
+                                            rt2.cost + costChangeSecondRoute >= self.sol.max_cost_of_route):
                                         continue
 
                                     moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
