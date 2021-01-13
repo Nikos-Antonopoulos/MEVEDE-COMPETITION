@@ -116,6 +116,8 @@ class Node:
         self.demand = dem
         self.x = xx
         self.y = yy
+        self.isRouted = False
+        self.isTabuTillIterator = -1
 
 
     def distance_from_depot(self):
