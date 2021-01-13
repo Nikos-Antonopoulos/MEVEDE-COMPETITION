@@ -2,6 +2,7 @@ from Solver import *
 from VRP_Model import *
 import pprint,random
 from SolutionDrawer import *
+from Combined import *
 
 
 
@@ -17,8 +18,11 @@ class Solver:
     def solve(self, with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
         self.paper_structure_method(with_sort)
-        self.ReportSolution(self.sol)
-        SolDrawer.draw(1, self.sol, self.allNodes)
+        # self.ReportSolution(self.sol)
+        # SolDrawer.draw(1, self.sol, self.allNodes)
+        print("start", self.sol.max_cost_of_route)
+        combined = Combined(self)
+        combined.VND()
         return self.sol
         
     def __init__(self, m):

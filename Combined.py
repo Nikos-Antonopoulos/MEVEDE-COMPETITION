@@ -540,33 +540,33 @@ class Combined:
 
     def FindBestSwapMove(self, sm):  # mo
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
-        firstRouteIndex = unpack[0]  # unpack index
-        rt1 = unpack[1]  # unpack Route
-        for secondRouteIndex in range(0, len(
+        max_route_index = unpack[0]  # unpack index
+        max_route = unpack[1]  # unpack Route
+        for route2_index in range(0, len(
                 self.sol.routes)):  # for every route that has not been checked for the first root
-            rt2: Route = self.sol.routes[secondRouteIndex]  # the route from which a node will be swapped
-            for firstNodeIndex in range(1, len(rt1.sequenceOfNodes) - 1):  # for every node of the first route
+            route2: Route = self.sol.routes[route2_index]  # the route from which a node will be swapped
+            for firstNodeIndex in range(1, len(max_route.sequenceOfNodes) - 1):  # for every node of the first route
                 startOfSecondNodeIndex = 1  # start index for the second route
-                if rt1 == rt2:  # if the routes are the same
+                if max_route_index == route2_index:  # if the routes are the same
                     startOfSecondNodeIndex = firstNodeIndex + 1  # start one node forward to avoid checking the same ones
                 for secondNodeIndex in range(startOfSecondNodeIndex, len(
-                        rt2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
+                        route2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
 
                     # nodes of the first route
-                    a1 = rt1.sequenceOfNodes[firstNodeIndex - 1]
-                    b1 = rt1.sequenceOfNodes[firstNodeIndex]
-                    c1 = rt1.sequenceOfNodes[firstNodeIndex + 1]
+                    a1 = max_route.sequenceOfNodes[firstNodeIndex - 1]
+                    b1 = max_route.sequenceOfNodes[firstNodeIndex]
+                    c1 = max_route.sequenceOfNodes[firstNodeIndex + 1]
 
                     # nodes of the second route
-                    a2 = rt2.sequenceOfNodes[secondNodeIndex - 1]
-                    b2 = rt2.sequenceOfNodes[secondNodeIndex]
-                    c2 = rt2.sequenceOfNodes[secondNodeIndex + 1]
+                    a2 = route2.sequenceOfNodes[secondNodeIndex - 1]
+                    b2 = route2.sequenceOfNodes[secondNodeIndex]
+                    c2 = route2.sequenceOfNodes[secondNodeIndex + 1]
 
                     moveCost = None
                     costChangeFirstRoute = None
                     costChangeSecondRoute = None
 
-                    if rt1 == rt2:  # if the routes are same
+                    if max_route_index == route2_index:  # if the routes are same
                         if firstNodeIndex == secondNodeIndex - 1:  # if the first node is behind the second node
                             costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + \
                                           self.time_matrix[b2.ID][c2.ID]
@@ -581,9 +581,9 @@ class Combined:
                             costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
                             moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                     else:
-                        if rt1.load - b1.demand + b2.demand > self.capacity:
+                        if max_route.load - b1.demand + b2.demand > self.capacity:
                             continue
-                        if rt2.load - b2.demand + b1.demand > self.capacity:
+                        if route2.load - b2.demand + b1.demand > self.capacity:
                             continue
 
                         costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
@@ -593,47 +593,47 @@ class Combined:
 
                         costChangeFirstRoute = costAdded1 - costRemoved1
                         costChangeSecondRoute = costAdded2 - costRemoved2
-                        if (rt1.cost + costChangeFirstRoute) > (rt2.cost + costChangeSecondRoute):
+                        if (max_route.cost + costChangeFirstRoute) > (route2.cost + costChangeSecondRoute):
                             moveCost = costChangeFirstRoute
                         else:
-                            moveCost = rt2.cost + costChangeSecondRoute - self.sol.max_cost_of_route
+                            moveCost = route2.cost + costChangeSecondRoute - self.sol.max_cost_of_route
                     if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
-                        self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex,
+                        self.StoreBestSwapMove(max_route_index, route2_index, firstNodeIndex, secondNodeIndex,
                                                moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
     def FindBestSwapMove2(self, sm):  # mo
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         max_route = unpack[1]  # unpack Route
-        for firstRouteIndex in range(0, len(self.sol.routes)):
-            rt1: Route = self.sol.routes[firstRouteIndex]
-            if rt1 != max_route:
-                for secondRouteIndex in range(firstRouteIndex, len(
+        for route1_index in range(0, len(self.sol.routes)):
+            route1: Route = self.sol.routes[route1_index]
+            if route1 != max_route:
+                for route2_index in range(route1_index, len(
                         self.sol.routes)):  # for every route that has not been checked for the first root
-                    rt2: Route = self.sol.routes[secondRouteIndex]  # the route from which a node will be swapped
-                    if rt2 != max_route:
+                    route2: Route = self.sol.routes[route2_index]  # the route from which a node will be swapped
+                    if route2 != max_route:
                         for firstNodeIndex in range(1,
-                                                    len(rt1.sequenceOfNodes) - 1):  # for every node of the first route
+                                                    len(route1.sequenceOfNodes) - 1):  # for every node of the first route
                             startOfSecondNodeIndex = 1  # start index for the second route
-                            if rt1 == rt2:  # if the routes are the same
+                            if route1 == route2:  # if the routes are the same
                                 startOfSecondNodeIndex = firstNodeIndex + 1  # start one node forward to avoid checking the same ones
                             for secondNodeIndex in range(startOfSecondNodeIndex, len(
-                                    rt2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
+                                    route2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
 
                                 # nodes of the first route
-                                a1 = rt1.sequenceOfNodes[firstNodeIndex - 1]
-                                b1 = rt1.sequenceOfNodes[firstNodeIndex]
-                                c1 = rt1.sequenceOfNodes[firstNodeIndex + 1]
+                                a1 = route1.sequenceOfNodes[firstNodeIndex - 1]
+                                b1 = route1.sequenceOfNodes[firstNodeIndex]
+                                c1 = route1.sequenceOfNodes[firstNodeIndex + 1]
 
                                 # nodes of the second route
-                                a2 = rt2.sequenceOfNodes[secondNodeIndex - 1]
-                                b2 = rt2.sequenceOfNodes[secondNodeIndex]
-                                c2 = rt2.sequenceOfNodes[secondNodeIndex + 1]
+                                a2 = route2.sequenceOfNodes[secondNodeIndex - 1]
+                                b2 = route2.sequenceOfNodes[secondNodeIndex]
+                                c2 = route2.sequenceOfNodes[secondNodeIndex + 1]
 
                                 moveCost = None
                                 costChangeFirstRoute = None
                                 costChangeSecondRoute = None
 
-                                if rt1 == rt2:  # if the routes are same
+                                if route1 == route2:  # if the routes are same
                                     if firstNodeIndex == secondNodeIndex - 1:  # if the first node is behind the second node
                                         costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + \
                                                       self.time_matrix[b2.ID][c2.ID]
@@ -648,9 +648,9 @@ class Combined:
                                         costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
                                         moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                                 else:
-                                    if rt1.load - b1.demand + b2.demand > self.capacity:
+                                    if route1.load - b1.demand + b2.demand > self.capacity:
                                         continue
-                                    if rt2.load - b2.demand + b1.demand > self.capacity:
+                                    if route2.load - b2.demand + b1.demand > self.capacity:
                                         continue
 
                                     costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
@@ -661,13 +661,13 @@ class Combined:
                                     costChangeFirstRoute = costAdded1 - costRemoved1
                                     costChangeSecondRoute = costAdded2 - costRemoved2
 
-                                    if (rt1.cost + costChangeFirstRoute >= self.sol.max_cost_of_route or
-                                            rt2.cost + costChangeSecondRoute >= self.sol.max_cost_of_route):
+                                    if (route1.cost + costChangeFirstRoute >= self.sol.max_cost_of_route or
+                                            route2.cost + costChangeSecondRoute >= self.sol.max_cost_of_route):
                                         continue
 
                                     moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
                                 if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
-                                    self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex,
+                                    self.StoreBestSwapMove(route1_index, route2_index, firstNodeIndex,
                                                            secondNodeIndex,
                                                            moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 

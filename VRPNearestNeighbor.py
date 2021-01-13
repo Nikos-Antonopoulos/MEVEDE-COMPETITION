@@ -1,6 +1,7 @@
 from VRP_Model import *
 from SolutionDrawer import *
 from Relocations import *
+from Combined import *
 
 class Solution:
     def __init__(self): #sider
@@ -32,8 +33,9 @@ class SolverNrstNghbr:
                                                # trialCost of the insertion (the cost on the route)
                                                # see find_best_insertion_for_customer for the use
 
-    def solve(self, with_sort = False): # with sort variable defines if the nearest_neighbor_with_opened_routes will
+    def solve(self, seed=1, with_sort=False): # with sort variable defines if the nearest_neighbor_with_opened_routes will
                                         # sort the self.customers
+        random.seed(seed)
         self.SetRoutedFlagToFalseForAllCustomers()
         self.nearest_neighbor_with_opened_routes(with_sort)
         # print("start", self.sol.max_cost_of_route)
@@ -41,6 +43,9 @@ class SolverNrstNghbr:
         # reloc.solveRelocations()
         # self.ReportSolution(self.sol)
         # SolDrawer.draw(0, self.sol, self.allNodes)
+        print('start', self.sol.max_cost_of_route)
+        combined = Combined(self)
+        combined.VND()
         return self.sol
 
     def ReportSolution(self, sol):
@@ -144,7 +149,7 @@ class SolverNrstNghbr:
                 cost_removed = self.time_matrix[last_node_present_in_the_route.ID][self.depot.ID] # the cost of the
                                                     # connection that broke (it will be reduced from the change_in_solution)
                 change_in_solution = cost_added - cost_removed
-                subjective_cost_of_insertion = trial_cost  # if the new insertion does not affect the min max cost
+                subjective_cost_of_insertion = trial_cost + 5*random.random()/10 # if the new insertion does not affect the min max cost
                                                            # of the solution, then subjective_cost equals trial_cost
 
                 # if the new cost of the route (route.cost + trial.cost) is bigger than the current min max cost of

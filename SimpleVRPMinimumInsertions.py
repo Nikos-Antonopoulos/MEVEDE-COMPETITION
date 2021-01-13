@@ -1,5 +1,6 @@
 from VRP_Model import *
 from SolutionDrawer import *
+from Combined import *
 
 class Solution:
     def __init__(self): #sider
@@ -30,6 +31,9 @@ class SolverSimpleMinIns:
         self.minimum_insertions_with_opened_routes(with_sort)
         # self.ReportSolution(self.sol)
         #SolDrawer.draw(0, self.sol, self.allNodes)
+        print("start", self.sol.max_cost_of_route)
+        combined = Combined(self)
+        combined.VND()
         return self.sol
 
     def ReportSolution(self, sol):

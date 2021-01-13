@@ -182,7 +182,7 @@ class SolverMinIns:
                         B.ID]  # the cost of the connection that broke (it will be reduced from the trialCost)
                     trial_cost = cost_added - cost_removed  # how the cost changed after the insertion
 
-                    subjective_cost_of_insertion = trial_cost # if the new insertion does not affect the min max cost
+                    subjective_cost_of_insertion = trial_cost + 5*random.random()/10# if the new insertion does not affect the min max cost
                                                              # of the solution, then subjective_cost equals trial_cost
 
                     # if the new cost of the route (route.cost + trial.cost) is bigger than the current min max cost of

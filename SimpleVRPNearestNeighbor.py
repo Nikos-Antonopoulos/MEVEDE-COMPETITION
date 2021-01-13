@@ -2,6 +2,7 @@ from VRP_Model import *
 from SolutionDrawer import *
 from Relocations import *
 from Swaps import *
+from Combined import *
 
 class Solution:
     def __init__(self): #sider
@@ -30,11 +31,8 @@ class SolverSimpleNrstNghbr:
         self.SetRoutedFlagToFalseForAllCustomers()
         self.nearest_neighbor_with_opened_routes(with_sort)
         print("start", self.sol.max_cost_of_route)
-        swap = Swaps(self)
-        swap.solveSwaps()
-        print("swaps", self.sol.max_cost_of_route)
-        reloc = Relocations(self)
-        reloc.solveRelocations()
+        combined = Combined(self)
+        combined.VND()
 
         # self.ReportSolution(self.sol)
         # SolDrawer.draw(0, self.sol, self.allNodes)
