@@ -170,7 +170,8 @@ class TabuCustom:
                 else:  # If the routes are same
                     move_cost = max_route_cost_change + route2_cost_change  # move cost is the difference from the old cost
 
-                if (self.MoveIsTabu2(F,B,G, localSearchIterator, move_cost)):
+
+                if (self.MoveIsTabu2(F,B,G, localSearchIterator, move_cost, True)):
                     continue
 
 
@@ -230,7 +231,7 @@ class TabuCustom:
                                                  route2_cost_change, relocation_move)
 
     def ApplyRelocationMove(self, rm: RelocationMove,localSearchIterator):
-        print(rm.originRoutePosition, rm.targetRoutePosition, rm.originNodePosition, rm.targetNodePosition)
+
         # print("hgjygcjyugcfjy",rm.originRoutePosition, rm.targetRoutePosition, rm.originNodePosition, rm.targetNodePosition)
         originRt = self.sol.routes[rm.originRoutePosition]  # origin route of the node to be relocated
         targetRt = self.sol.routes[rm.targetRoutePosition]  # target route of the node to be relocated
@@ -238,7 +239,7 @@ class TabuCustom:
         A = originRt.sequenceOfNodes[rm.originNodePosition-1] # the node before B
         B = originRt.sequenceOfNodes[rm.originNodePosition]   # the Node object to be relocated
         C = originRt.sequenceOfNodes[rm.originNodePosition+1] # the node before B
-        print(self.TabuForbiddenArcs[A.ID][B.ID])
+        # print(A.ID, B.ID, C.ID)
         if originRt == targetRt:  # If the routes are same
             del originRt.sequenceOfNodes[rm.originNodePosition]  # delete the node from it's previous place
             if rm.originNodePosition < rm.targetNodePosition:    # if the origin node is previous from the target node in the sequence
@@ -264,8 +265,9 @@ class TabuCustom:
             targetRt.load += B.demand
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
+
         self.SetTabuForRelocations(A,B,C, localSearchIterator)
-        print("check",self.TabuForbiddenArcs[A.ID][B.ID])
+        # print("check",self.TabuForbiddenArcs[A.ID][B.ID])
         self.TestSolution()
     #    print("Relocation move",A.ID,B.ID,C.ID,originRt.sequenceOfNodes,targetRt.sequenceOfNodes)
 
@@ -455,7 +457,7 @@ class TabuCustom:
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
         self.SetTabuIteratorForSwaps(a1.ID,b1.ID,c1.ID,a2.ID,b2.ID,c2.ID, localSearchIterator)
         self.TestSolution()
-        print("Swap Move",b1.ID,b2.ID)
+        # print("Swap Move",b1.ID,b2.ID)
     def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost,
                           costChangeFirstRoute, costChangeSecondRoute, sm):
         sm.positionOfFirstRoute = firstRouteIndex
@@ -677,7 +679,7 @@ class TabuCustom:
         SolDrawer.draw(0, self.sol, self.allNodes)
 
         while terminationCondition is False:
-            operator = random.randint(0,0)
+            operator = random.randint(0,2)
 
             rm.Initialize()
             sm.Initialize()
@@ -702,7 +704,7 @@ class TabuCustom:
             self.TestSolution()
             solution_cost_trajectory.append(self.sol.max_cost_of_route)
 
-    #        print(localSearchIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
+            print(localSearchIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
 
             if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
                 self.bestSolution = self.cloneSolution(self.sol)
@@ -725,10 +727,10 @@ class TabuCustom:
             return True
         return False        
 
-    def MoveIsTabu2(self, F: Node,B: Node,G: Node, iterator, moveCost):
+    def MoveIsTabu2(self, F: Node,B: Node,G: Node, iterator, moveCost, route_is_max=False):
         # print("TargetBefore B:",F.ID," B:",B.ID)
         # print("B:",B.ID," Target after B:",G.ID)
-        if moveCost + self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route - 0.001:
+        if route_is_max and moveCost + self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route - 0.001:
             return False
         if (self.TabuForbiddenArcs[F.ID][B.ID] > iterator) or (self.TabuForbiddenArcs[B.ID][G.ID] > iterator):
             return True

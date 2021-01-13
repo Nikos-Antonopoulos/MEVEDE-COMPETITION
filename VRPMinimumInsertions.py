@@ -1,7 +1,7 @@
 from VRP_Model import *
 from SolutionDrawer import *
-import random
-from Combined import *
+import TabuCustom
+# from Combined import *
 # from Relocations import *
 # from Swaps import *
 
@@ -49,8 +49,8 @@ class SolverMinIns:
         # print("swaps", self.sol.max_cost_of_route)
         # reloc = Relocations(self)
         # reloc.solveRelocations()
-        combined = Combined(self)
-        combined.VND()
+        tabu = TabuCustom.TabuCustom(self)
+        tabu.solveCombined()
 
 
 
