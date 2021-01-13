@@ -846,3 +846,205 @@ class Combined:
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
 
+    def VNS(self):
+        self.bestSolution = self.cloneSolution(self.sol)
+        VNSIterator = 0
+        kmax = 2
+        rm = RelocationMove()
+        sm = SwapMove()
+        top = TwoOptMove()
+        k = 0
+        draw = False
+        while 1:
+            while k <= kmax:
+                self.InitializeOperators(rm, sm,top)
+                if k == 0:
+                    # relocations in both max route and other routes without increasing max_cost
+                    self.find_best_relocation_move_max_and_other(rm)
+                    if rm.originRoutePosition is not None and rm.moveCost < 0:
+                        self.ApplyRelocationMove(rm)
+                        if draw:
+                            SolDrawer.draw(VNSIterator, self.sol, self.allNodes)
+                        VNSIterator = VNSIterator + 1
+                        self.searchTrajectory.append(self.sol.max_cost_of_route)
+                        k = 0
+                    else:
+                        k += 1
+                elif k == 1:
+                    # swaps in both max route and other routes without increasing max_cost
+                    self.find_best_swap_move_max_and_other(sm)
+                    if sm.positionOfFirstRoute is not None and sm.moveCost < 0:
+                        self.ApplySwapMove(sm)
+                        if draw:
+                            SolDrawer.draw(VNSIterator, self.sol, self.allNodes)
+                        VNSIterator = VNSIterator + 1
+                        self.searchTrajectory.append(self.sol.max_cost_of_route)
+                        k = 0
+                    else:
+                        k += 1
+                elif k == 2:
+                    # two opt only in max route
+                    self.FindBestTwoOptMove(top)
+                    if top.positionOfFirstRoute is not None and top.moveCost < 0:
+                        self.ApplyTwoOptMove(top)
+                        if draw:
+                            SolDrawer.draw(VNSIterator, self.sol, self.allNodes)
+                        VNSIterator = VNSIterator + 1
+                        self.searchTrajectory.append(self.sol.max_cost_of_route)
+                        k = 0
+                    else:
+                        k += 1
+                random_moves_done = 0
+            print(self.sol.max_cost_of_route)
+            while random_moves_done < 20:
+                is_move_done = self.do_a_random_move()
+                if is_move_done:
+                    random_moves_done += 1
+            k = 0
+
+            # if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
+            #     self.bestSolution = self.cloneSolution(self.sol)
+
+    def do_a_random_move(self):
+        i = random.randint(0, 2)
+        if i == 0:
+            return self.do_a_random_relocation()
+        elif i == 1:
+            return self.do_a_random_swap()
+        elif i == 2:
+            return self.do_a_random_two_opt()
+
+
+    def do_a_random_relocation(self):
+        relocation_move = RelocationMove()
+
+        route1_index = random.randint(0, 24)
+        route1 = self.sol.routes[route1_index]
+        route2_index = random.randint(0, 24)
+        route2 = self.sol.routes[route2_index]
+        origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
+        target_node_index = random.randint(0, len(route2.sequenceOfNodes) - 2)
+        if route1_index == route2_index and \
+                (target_node_index == origin_node_index or target_node_index == origin_node_index - 1):
+            # If the relocation will be done on the same Route
+            # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
+            return False
+
+        A = route1.sequenceOfNodes[origin_node_index - 1]
+        B = route1.sequenceOfNodes[origin_node_index]
+        C = route1.sequenceOfNodes[origin_node_index + 1]
+
+        F = route2.sequenceOfNodes[target_node_index]
+        G = route2.sequenceOfNodes[target_node_index + 1]
+
+        if route1_index != route2_index:  # If the routes are diferrent
+            if route2.load + B.demand > route2.capacity:  # if the capacity constrains are violated then continue
+                return False
+
+        route1_cost_change = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
+                             self.time_matrix[B.ID][
+                                 C.ID]
+        route2_cost_change = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
+                             self.time_matrix[F.ID][G.ID]
+
+        if (route1.cost + route1_cost_change >= self.sol.max_cost_of_route or
+                route2.cost + route2_cost_change >= self.sol.max_cost_of_route):
+            return False
+
+        move_cost = route1_cost_change + route2_cost_change
+        self.StoreBestRelocationMove(route1_index, route2_index, origin_node_index,
+                                     target_node_index, move_cost, route1_cost_change,
+                                     route2_cost_change, relocation_move)
+        self.ApplyRelocationMove(relocation_move)
+        return True
+
+    def do_a_random_swap(self):
+        swap_move = SwapMove()
+
+        route1_index = random.randint(0, 24)
+        route1 = self.sol.routes[route1_index]
+        route2_index = random.randint(0, 24)
+        route2 = self.sol.routes[route2_index]
+        origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
+        target_node_index = random.randint(1, len(route2.sequenceOfNodes) - 2)
+        # nodes of the first route
+        a1 = route1.sequenceOfNodes[origin_node_index - 1]
+        b1 = route1.sequenceOfNodes [origin_node_index]
+        c1 = route1.sequenceOfNodes[origin_node_index + 1]
+
+        # nodes of the second route
+        a2 = route2.sequenceOfNodes[target_node_index - 1]
+        b2 = route2.sequenceOfNodes[target_node_index]
+        c2 = route2.sequenceOfNodes[target_node_index + 1]
+
+        if route1_index == route2_index:  # if the routes are same
+            if origin_node_index == target_node_index - 1:  # if the first node is behind the second node
+                costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + \
+                              self.time_matrix[b2.ID][c2.ID]
+                costAdded = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][b1.ID] + \
+                            self.time_matrix[b1.ID][c2.ID]
+
+            else:
+                costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+        else:
+            if route1.load - b1.demand + b2.demand > self.capacity:
+                return False
+            if route2.load - b2.demand + b1.demand > self.capacity:
+                return False
+
+            costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+            costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+            costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+            costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+
+            costChangeFirstRoute = costAdded1 - costRemoved1
+            costChangeSecondRoute = costAdded2 - costRemoved2
+            if (route1.cost + costChangeFirstRoute) > (route2.cost + costChangeSecondRoute):
+                moveCost = costChangeFirstRoute
+            else:
+                moveCost = route2.cost + costChangeSecondRoute - self.sol.max_cost_of_route
+
+            self.StoreBestSwapMove(route1_index, route2_index, origin_node_index, target_node_index,
+                                   moveCost, costChangeFirstRoute, costChangeSecondRoute, swap_move)
+            self.ApplySwapMove(swap_move)
+            return True
+
+    def do_a_random_two_opt(self):
+        two_opt_move = TwoOptMove()
+
+        route1_index = random.randint(0, 24)
+        route1 = self.sol.routes[route1_index]
+        route2_index = random.randint(0, 24)
+        route2 = self.sol.routes[route2_index]
+        origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
+        target_node_index = random.randint(1, len(route2.sequenceOfNodes) - 2)
+
+        A = route1.sequenceOfNodes[origin_node_index]  # the starting node of the intersection
+        B = route1.sequenceOfNodes[origin_node_index + 1]  # the next node of the starting node
+        K = route2.sequenceOfNodes[target_node_index]  # the node that we land to continue the sequence after resolving the intersection
+        L = route2.sequenceOfNodes[target_node_index + 1]  # the next node of node K
+
+        if route1_index == route2_index:
+            if origin_node_index == 0 and target_node_index == len(route1.sequenceOfNodes) - 2:
+                return False
+            costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
+            costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
+            moveCost = costAdded - costRemoved
+
+        else:
+            if origin_node_index == 0 and target_node_index == 0:
+                return False
+            if origin_node_index == len(route1.sequenceOfNodes) - 2 and target_node_index == len(route2.sequenceOfNodes) - 2:
+                return False
+
+            if self.CapacityIsViolated(route1, origin_node_index, route2, target_node_index):
+                return False
+
+            moveCost = self.RouteCostCheck(route1, route2, origin_node_index, target_node_index)
+
+        self.StoreBestTwoOptMove(route1_index, route2_index, origin_node_index, target_node_index, moveCost, two_opt_move)
+        self.ApplyTwoOptMove(two_opt_move)
+        return True
