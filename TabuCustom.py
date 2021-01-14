@@ -120,6 +120,7 @@ class TabuCustom:
         if rm.originRoutePosition is not None:
             if rm.moveCost < 0:
                 return
+        rm.Initialize()
         for originRouteIndex in range(0, len(self.sol.routes)):
             if originRouteIndex == max_route_index:
                 continue
@@ -283,6 +284,7 @@ class TabuCustom:
         if sm.positionOfFirstRoute is not None:
             if sm.moveCost < 0:
                 return
+        sm.Initialize()
         self.FindBestSwapMove2(sm)
 
     def FindBestSwapMove(self, sm):  # mo
@@ -483,6 +485,7 @@ class TabuCustom:
         if top.positionOfFirstRoute is not None:
             if top.moveCost < 0:
                 return
+        top.Initialize()
         for rtInd1 in range(0, len(self.sol.routes)):
             if rtInd1 == rtInd_max:
                 continue
@@ -787,10 +790,10 @@ class TabuCustom:
         # print("TWO OPT",rt1.sequenceOfNodes[top.positionOfFirstNode].ID,
         #       rt1.sequenceOfNodes[top.positionOfFirstNode + 1].ID,
         #       rt2.sequenceOfNodes[top.positionOfSecondNode].ID,
-        #        rt2.sequenceOfNodes[top.positionOfSecondNode + 1].ID,
-        #       self.TabuForbiddenArcs[rt1.sequenceOfNodes[top.positionOfFirstNode].ID][rt1.sequenceOfNodes[top.positionOfFirstNode + 1].ID],
-        #       self.tabuIterator
-        #       )
+        #       rt2.sequenceOfNodes[top.positionOfSecondNode + 1].ID,
+        #      self.TabuForbiddenArcs[rt1.sequenceOfNodes[top.positionOfFirstNode].ID][rt1.sequenceOfNodes[top.positionOfFirstNode + 1].ID],
+        #      self.tabuIterator
+        #      )
         if rt1 == rt2:
             # reverses the nodes in the segment [positionOfFirstNode + 1,  top.positionOfSecondNode]
             reversedSegment = reversed(rt1.sequenceOfNodes[top.positionOfFirstNode + 1: top.positionOfSecondNode + 1])
