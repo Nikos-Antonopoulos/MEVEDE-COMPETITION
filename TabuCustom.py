@@ -491,59 +491,66 @@ class TabuCustom:
                     continue
                 self.FindBestTwoOptMove_notMaxRoute(top, rtInd1, rtInd2)
 
-    def FindBestTwoOptMove_MaxRoute(self, top, rtInd1,
-                                    rtInd2):  # spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
+    def FindBestTwoOptMove_MaxRoute(self, top, rtInd1, rtInd2):  # spy + markou
+        # ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
         rt1: Route = self.sol.routes[rtInd1]
         rt2: Route = self.sol.routes[rtInd2]
         route_max = self.CalculateMaxCostOfRoute()
-        route1_current_cost = 0  # the current cost of the route based on the loop (0,A,B------
-        for nodeInd1 in range(0, len(
-                rt1.sequenceOfNodes) - 1):  # den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
-            route2_current_cost = 0
-            one = rt1.sequenceOfNodes[nodeInd1 - 1]
-            two = rt1.sequenceOfNodes[nodeInd1]
+        route1_current_cost = 0  # the current cost of the route 1 based on the nodes passed (0,A,B---
+        route1_current_load = 0  # the current load of the route 1 based on the nodes passed (0,A,B---
+
+        for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):  # for all the nodes in route 1
+            route2_current_cost = 0  # the current cost of the route 2 based on the nodes passed (0,A,B------
+            route2_current_load = 0  # the current load of the route 2 based on the nodes passed (0,A,B------
+            one = rt1.sequenceOfNodes[nodeInd1 - 1]  # The prev node we are currently on
+            two = rt1.sequenceOfNodes[nodeInd1]  # he node we are currently on
             route1_current_cost += self.time_matrix[one.ID][two.ID]  # adding to current route cost
+            route1_current_load += two.demand  # adding to current load cost
+
             start2 = 0
             if (rt1 == rt2):
                 start2 = nodeInd1 + 2  # landing point must be at least 2 positions after starting point
 
-            for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
+            for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):  # for all the nodes in route 2
                 three = rt2.sequenceOfNodes[nodeInd2 - 1]
                 four = rt2.sequenceOfNodes[nodeInd2]
                 route2_current_cost += self.time_matrix[three.ID][four.ID]
+                route2_current_load += four.demand
                 moveCost = 10 ** 9
 
-                # C = rt1.sequenceOfNodes[nodeInd1 - 1]
                 A = rt1.sequenceOfNodes[nodeInd1]  # the starting node of the intersection
                 B = rt1.sequenceOfNodes[nodeInd1 + 1]  # the next node of the starting node
-
-                # M = rt2.sequenceOfNodes[nodeInd2 - 1]
                 K = rt2.sequenceOfNodes[
                     nodeInd2]  # the node that we land to continue the sequence after resolving the intersection
                 L = rt2.sequenceOfNodes[nodeInd2 + 1]  # the next node of node K
 
-                if rt1 == rt2:
+                if rt1 == rt2:  # if the 2-opt is implemented on the same route
                     if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
                         continue
                     costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
                     costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
                     moveCost = costAdded - costRemoved
 
-                else:
+                else:  # if the 2-opt is implemented between two routes
                     if nodeInd1 == 0 and nodeInd2 == 0:
                         continue
-                    if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(
-                            rt2.sequenceOfNodes) - 2:
+                    if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
                         continue
 
-                    if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                    # A/-B-C AND K/-L-M MAKE A-L-M AND K-B-C. for rt1 you need the load of A = route1_current_capacity
+                    # and you need L-M which is K-L-M without K = rt2.load - route2_current_capacity
+                    rt1_new_capacity = route1_current_load + rt2.load - route2_current_load
+                    rt2_new_capacity = route2_current_load + rt1.load - route1_current_load
+
+                    # if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                    if rt1_new_capacity > rt1.capacity or rt2_new_capacity > rt2.capacity:
                         continue
 
-                    rt1_cost = route1_current_cost + self.time_matrix[A.ID][
-                        L.ID] + rt2.cost - route2_current_cost - \
+                    # A/-B-C AND K/-L-M MAKE A-L-M AND K-B-C.The rt1 new cost is A-L(A = route1_current_cost + A-L.cost)
+                    # + L-M (( K-L-M cost = rt2.cost ) - (K = route2_current_cost) - (K-L.cst))
+                    rt1_cost = route1_current_cost + self.time_matrix[A.ID][L.ID] + rt2.cost - route2_current_cost - \
                                self.time_matrix[K.ID][L.ID]
-                    rt2_cost = route2_current_cost + self.time_matrix[B.ID][
-                        K.ID] + rt1.cost - route1_current_cost - \
+                    rt2_cost = route2_current_cost + self.time_matrix[B.ID][K.ID] + rt1.cost - route1_current_cost - \
                                self.time_matrix[A.ID][B.ID]
 
                     if rt1_cost < route_max and rt2_cost < route_max:
@@ -563,17 +570,20 @@ class TabuCustom:
 
     def FindBestTwoOptMove_notMaxRoute(self, top, rtInd1,
                                        rtInd2):  # spy + mark ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
+        # move, which is the one that reduces cost the most (needs current best as input). Comments on Maxroute.
         rt1: Route = self.sol.routes[rtInd1]
         rt2: Route = self.sol.routes[rtInd2]
         route_max = self.CalculateMaxCostOfRoute()
         route1_current_cost = 0  # the current cost of the route based on the loop (0,A,B------
-        route2_current_cost = 0  # the current cost of the route based on the loop (0,K,L------
+        route1_current_load = 0
         for nodeInd1 in range(1, len(
                 rt1.sequenceOfNodes) - 1):  # den prepei na ksekinaei apo 0 apeidei o pinakas den einai sumetrikos
             route2_current_cost = 0
+            route2_current_load = 0
             one = rt1.sequenceOfNodes[nodeInd1 - 1]
             two = rt1.sequenceOfNodes[nodeInd1]
             route1_current_cost += self.time_matrix[one.ID][two.ID]  # adding to current route cost
+            route1_current_load += two.demand
             start2 = 1
             if (rt1 == rt2):
                 start2 = nodeInd1 + 2  # landing point must be at least 2 positions after starting point
@@ -582,13 +592,11 @@ class TabuCustom:
                 three = rt2.sequenceOfNodes[nodeInd2 - 1]
                 four = rt2.sequenceOfNodes[nodeInd2]
                 route2_current_cost += self.time_matrix[three.ID][four.ID]
+                route2_current_load += four.demand
                 moveCost = 10 ** 9
 
-                C = rt1.sequenceOfNodes[nodeInd1 - 1]
                 A = rt1.sequenceOfNodes[nodeInd1]  # the starting node of the intersection
                 B = rt1.sequenceOfNodes[nodeInd1 + 1]  # the next node of the starting node
-
-                M = rt2.sequenceOfNodes[nodeInd2 - 1]
                 K = rt2.sequenceOfNodes[
                     nodeInd2]  # the node that we land to continue the sequence after resolving the intersection
                 L = rt2.sequenceOfNodes[nodeInd2 + 1]  # the next node of node K
@@ -606,11 +614,17 @@ class TabuCustom:
                     if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
                         continue
 
-                    if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                    rt1_new_capacity = route1_current_load + rt2.load - route2_current_load
+                    rt2_new_capacity = route2_current_load + rt1.load - route1_current_load
+
+                    # if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+
+                    if rt1_new_capacity > rt1.capacity or rt2_new_capacity > rt2.capacity:
                         continue
 
                     rt1_cost = route1_current_cost + self.time_matrix[A.ID][L.ID] + rt2.cost - route2_current_cost - \
                                self.time_matrix[K.ID][L.ID]
+
                     rt2_cost = route2_current_cost + self.time_matrix[B.ID][K.ID] + rt1.cost - route1_current_cost - \
                                self.time_matrix[A.ID][B.ID]
 
