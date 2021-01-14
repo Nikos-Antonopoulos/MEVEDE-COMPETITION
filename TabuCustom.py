@@ -173,8 +173,8 @@ class TabuCustom:
 
                 # NO NEED TO CHECK IF THE MOVE IS TABOO, because it will be applied only if the max_cost_of_route
                 # gets reduced
-                if self.MoveIsTabuForRelocations(F.ID, B.ID, G.ID):
-                    continue
+                # if self.MoveIsTabuForRelocations(F.ID, B.ID, G.ID):
+                #     continue
                 if (move_cost < relocation_move.moveCost) and abs(move_cost) > 0.0001:
                     # if the profit is better than the profit that we've already found in the loop
                     self.StoreBestRelocationMove(max_route_index, route2_index, originNodeIndex,
@@ -347,8 +347,8 @@ class TabuCustom:
 
                     # NO NEED TO CHECK IF THE MOVE IS TABOO, because it will be applied only if the max_cost_of_route
                     # gets reduced
-                    if self.MoveIsTabuForSwaps(a1.ID, b1.ID, c1.ID, a2.ID, b2.ID, c2.ID):
-                        continue
+                    # if self.MoveIsTabuForSwaps(a1.ID, b1.ID, c1.ID, a2.ID, b2.ID, c2.ID):
+                    #     continue
 
                     if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
                         self.StoreBestSwapMove(max_route_index, route2_index, firstNodeIndex, secondNodeIndex,
@@ -483,13 +483,13 @@ class TabuCustom:
         if top.positionOfFirstRoute is not None:
             if top.moveCost < 0:
                 return
-        # for rtInd1 in range(0, len(self.sol.routes)):
-        #     if rtInd1 == rtInd_max:
-        #         continue
-        #     for rtInd2 in range(0, len(self.sol.routes)):
-        #         if rtInd2 == rtInd_max:
-        #             continue
-        #         self.FindBestTwoOptMove_notMaxRoute(top, rtInd1, rtInd2)
+        for rtInd1 in range(0, len(self.sol.routes)):
+            if rtInd1 == rtInd_max:
+                continue
+            for rtInd2 in range(0, len(self.sol.routes)):
+                if rtInd2 == rtInd_max:
+                    continue
+                self.FindBestTwoOptMove_notMaxRoute(top, rtInd1, rtInd2)
 
     def FindBestTwoOptMove_MaxRoute(self, top, rtInd1,
                                     rtInd2):  # spy ---> this method finds the best 2-opt move, which is the one that reduces cost the most (needs current best as input)
@@ -554,8 +554,8 @@ class TabuCustom:
 
                 # NO NEED TO CHECK IF THE MOVE IS TABOO, because it will be applied only if the max_cost_of_route
                 # gets reduced
-                if self.MoveIsTabuForTwoOpt(A.ID, B.ID, K.ID, L.ID):
-                    continue
+                # if self.MoveIsTabuForTwoOpt(A.ID, B.ID, K.ID, L.ID):
+                #     continue
 
                 if moveCost < top.moveCost and abs(moveCost) > 0.0001:
                     # compares current move cost with best move cost at the time and stores best
