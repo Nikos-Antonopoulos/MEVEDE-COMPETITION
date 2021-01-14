@@ -984,3 +984,40 @@ class TabuCustom:
 
     def IsArcTabu(self, node1_id, node2_id):
         return self.TabuForbiddenArcs[node1_id][node2_id] > self.tabuIterator
+    
+    def changetwoNeighboorsOfMaxRoute(self):
+        unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
+        max_route_index = unpack[0]  # unpack index
+        max_route = unpack[1]  # unpack Route
+        costChangeFirstRoute = None
+        costChangeSecondRoute = None
+
+        sm = SwapMove()
+        sm.Initialize()
+        for firstNodeIndex in range(1,len(max_route.sequenceOfNodes) - 1):
+            for secondNodeIndex in range(len(max_route.sequenceOfNodes)-2,1,-1):
+                if(secondNodeIndex -1 <= firstNodeIndex):
+                    continue
+                if(firstNodeIndex+1 >= secondNodeIndex):
+                    continue
+                a1 = max_route.sequenceOfNodes[firstNodeIndex - 1]
+                b1 = max_route.sequenceOfNodes[firstNodeIndex]
+                c1 = max_route.sequenceOfNodes[firstNodeIndex + 1]
+
+                a2 = max_route.sequenceOfNodes[secondNodeIndex - 1]
+                b2 = max_route.sequenceOfNodes[secondNodeIndex]
+                c2 = max_route.sequenceOfNodes[secondNodeIndex + 1]
+    
+            if((self.time_matrix[b1.ID][c2.ID] + self.time_matrix[c1.ID][b2.ID]) < (self.time_matrix[b1.ID][c1.ID]+self.time_matrix[b2.ID][c2.ID])):
+                
+                costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+
+                moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                self.StoreBestSwapMove(max_route_index, max_route_index, firstNodeIndex, secondNodeIndex,moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
+                if sm.positionOfFirstRoute is not None:
+                    if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
+                        self.ApplySwapMove(sm)
+                        
