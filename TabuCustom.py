@@ -948,6 +948,23 @@ class TabuCustom:
                 self.find_best_relocation_move_max_and_other(rm)
                 if rm.originRoutePosition is not None:
                     self.ApplyRelocationMove(rm)
+                    # In case we wanna do checks for relocations replace the above with the one in the comments 
+                #           if operator == 0:
+                # self.find_best_relocation_move_max_and_other(rm)
+                # if rm.originRoutePosition is not None:
+                #     print("Relocation Move: Took Node with index :",rm.originNodePosition," from route with index:",rm.originRoutePosition )
+                #     print("Relocation Move: Will insert after Node with index:",rm.targetNodePosition," to route with index:",rm.targetRoutePosition )
+                #     for i in range(len(self.sol.routes)):
+                #         if (i == rm.originRoutePosition):
+                #             print("Origin Route",self.sol.routes[i])
+                #         if(i==rm.targetRoutePosition):
+                #             print("Target Route",self.sol.routes[i])
+                #     self.ApplyRelocationMove(rm)
+                #     for i in range(len(self.sol.routes)):
+                #         if (i == rm.originRoutePosition):
+                #             print("New origin Route",self.sol.routes[i])
+                #         if(i==rm.targetRoutePosition):
+                #             print("New Target Route",self.sol.routes[i])
             # Swaps
             elif operator == 1:
                 self.find_best_swap_move_max_and_other(sm)
