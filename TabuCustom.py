@@ -117,7 +117,11 @@ class TabuCustom:
             if rm.moveCost < 0:
                 return
         for originRouteIndex in range(0, len(self.sol.routes)):
+            if originRouteIndex == max_route_index:
+                continue
             for targetRouteIndex in range(0, len(self.sol.routes)):  # Every possible route that the customer can go to
+                if targetRouteIndex == max_route_index:
+                    continue
                 self.find_best_relocation_for_two_routes_not_max_route(rm, originRouteIndex, targetRouteIndex,localSearchIterator)
 
     def find_best_relocation_for_max_route_and_another_route(self, relocation_move, max_route_index, route2_index,localSearchIterator):
@@ -359,68 +363,70 @@ class TabuCustom:
         max_route = unpack[1]  # unpack Route
         for route1_index in range(0, len(self.sol.routes)):
             route1: Route = self.sol.routes[route1_index]
-            for route2_index in range(route1_index, len(
-                    self.sol.routes)):  # for every route that has not been checked for the first root
-                route2: Route = self.sol.routes[route2_index]  # the route from which a node will be swapped
-                for firstNodeIndex in range(1,
-                                            len(route1.sequenceOfNodes) - 1):  # for every node of the first route
-                    startOfSecondNodeIndex = 1  # start index for the second route
-                    if route1 == route2:  # if the routes are the same
-                        startOfSecondNodeIndex = firstNodeIndex + 1  # start one node forward to avoid checking the same ones
-                    for secondNodeIndex in range(startOfSecondNodeIndex, len(
-                            route2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
+            if route1 != max_route:
+                for route2_index in range(route1_index, len(
+                        self.sol.routes)):  # for every route that has not been checked for the first root
+                    route2: Route = self.sol.routes[route2_index]  # the route from which a node will be swapped
+                    if route2 != max_route:
+                        for firstNodeIndex in range(1,
+                                                    len(route1.sequenceOfNodes) - 1):  # for every node of the first route
+                            startOfSecondNodeIndex = 1  # start index for the second route
+                            if route1 == route2:  # if the routes are the same
+                                startOfSecondNodeIndex = firstNodeIndex + 1  # start one node forward to avoid checking the same ones
+                            for secondNodeIndex in range(startOfSecondNodeIndex, len(
+                                    route2.sequenceOfNodes) - 1):  # for every node of the second route after the index we specified
 
-                        # nodes of the first route
-                        a1 = route1.sequenceOfNodes[firstNodeIndex - 1]
-                        b1 = route1.sequenceOfNodes[firstNodeIndex]
-                        c1 = route1.sequenceOfNodes[firstNodeIndex + 1]
+                                # nodes of the first route
+                                a1 = route1.sequenceOfNodes[firstNodeIndex - 1]
+                                b1 = route1.sequenceOfNodes[firstNodeIndex]
+                                c1 = route1.sequenceOfNodes[firstNodeIndex + 1]
 
-                        # nodes of the second route
-                        a2 = route2.sequenceOfNodes[secondNodeIndex - 1]
-                        b2 = route2.sequenceOfNodes[secondNodeIndex]
-                        c2 = route2.sequenceOfNodes[secondNodeIndex + 1]
+                                # nodes of the second route
+                                a2 = route2.sequenceOfNodes[secondNodeIndex - 1]
+                                b2 = route2.sequenceOfNodes[secondNodeIndex]
+                                c2 = route2.sequenceOfNodes[secondNodeIndex + 1]
 
-                        moveCost = None
-                        costChangeFirstRoute = None
-                        costChangeSecondRoute = None
+                                moveCost = None
+                                costChangeFirstRoute = None
+                                costChangeSecondRoute = None
 
-                        if route1 == route2:  # if the routes are same
-                            if firstNodeIndex == secondNodeIndex - 1:  # if the first node is behind the second node
-                                costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + \
-                                              self.time_matrix[b2.ID][c2.ID]
-                                costAdded = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][b1.ID] + \
-                                            self.time_matrix[b1.ID][c2.ID]
-                                moveCost = costAdded - costRemoved
+                                if route1 == route2:  # if the routes are same
+                                    if firstNodeIndex == secondNodeIndex - 1:  # if the first node is behind the second node
+                                        costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + \
+                                                      self.time_matrix[b2.ID][c2.ID]
+                                        costAdded = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][b1.ID] + \
+                                                    self.time_matrix[b1.ID][c2.ID]
+                                        moveCost = costAdded - costRemoved
 
-                            else:
-                                costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
-                                costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
-                                costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
-                                costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
-                                moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                        else:
-                            if route1.load - b1.demand + b2.demand > self.capacity:
-                                continue
-                            if route2.load - b2.demand + b1.demand > self.capacity:
-                                continue
+                                    else:
+                                        costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                                        costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                                        costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                                        costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+                                        moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                                else:
+                                    if route1.load - b1.demand + b2.demand > self.capacity:
+                                        continue
+                                    if route2.load - b2.demand + b1.demand > self.capacity:
+                                        continue
 
-                            costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
-                            costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
-                            costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
-                            costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+                                    costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                                    costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                                    costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                                    costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
 
-                            costChangeFirstRoute = costAdded1 - costRemoved1
-                            costChangeSecondRoute = costAdded2 - costRemoved2
+                                    costChangeFirstRoute = costAdded1 - costRemoved1
+                                    costChangeSecondRoute = costAdded2 - costRemoved2
 
 
 
-                            moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                        if self.MoveIsTabuForSwaps(a1.ID,b1.ID,c1.ID,a2.ID,b2.ID,c2.ID, localSearchIterator, moveCost) :
-                            continue
-                        if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
-                            self.StoreBestSwapMove(route1_index, route2_index, firstNodeIndex,
-                                                   secondNodeIndex,
-                                                   moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
+                                    moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                                if self.MoveIsTabuForSwaps(a1.ID,b1.ID,c1.ID,a2.ID,b2.ID,c2.ID, localSearchIterator, moveCost) :
+                                    continue
+                                if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
+                                    self.StoreBestSwapMove(route1_index, route2_index, firstNodeIndex,
+                                                           secondNodeIndex,
+                                                           moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
     def ApplySwapMove(self, sm,localSearchIterator):
         
@@ -469,7 +475,11 @@ class TabuCustom:
             if top.moveCost < 0:
                 return
         for rtInd1 in range(0, len(self.sol.routes)):
+            if rtInd1 == rtInd_max:
+                continue
             for rtInd2 in range(0, len(self.sol.routes)):
+                if rtInd2 == rtInd_max:
+                    continue
                 self.FindBestTwoOptMove_notMaxRoute(top, rtInd1, rtInd2,localSearchIterator)
 
     def FindBestTwoOptMove_MaxRoute(self, top, rtInd1,
@@ -594,8 +604,8 @@ class TabuCustom:
                     rt2_cost = route2_current_cost + self.time_matrix[B.ID][K.ID] + rt1.cost - route1_current_cost - \
                                self.time_matrix[A.ID][B.ID]
 
-                    # if rt1_cost >= route_max or rt2_cost >= route_max:
-                    #     continue
+                    if rt1_cost >= route_max or rt2_cost >= route_max:
+                        continue
 
                     costAdded = self.time_matrix[A.ID][L.ID] + self.time_matrix[B.ID][K.ID]
                     costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
