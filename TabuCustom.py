@@ -128,7 +128,7 @@ class TabuCustom:
     def solveCombined(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
         # sort the self.customers
         # self.VND()
-        self.TabuSearch(0)
+        self.TabuSearch(0,True)
         return self.sol
 
     def FindRouteWithMaxCost(self):  # mo
@@ -283,7 +283,7 @@ class TabuCustom:
                                                  targetNodeIndex, move_cost, route1_cost_change,
                                                  route2_cost_change, relocation_move)
 
-    def ApplyRelocationMove(self, rm: RelocationMove):
+    def ApplyRelocationMove(self, rm: RelocationMove,tabu=True):
 
         originRt = self.sol.routes[rm.originRoutePosition]  # origin route of the node to be relocated
         targetRt = self.sol.routes[rm.targetRoutePosition]  # target route of the node to be relocated
@@ -317,8 +317,8 @@ class TabuCustom:
             targetRt.load += B.demand
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
-
-        self.SetTabuForRelocations(A.ID, B.ID, C.ID)
+        if tabu:
+            self.SetTabuForRelocations(A.ID, B.ID, C.ID)
         self.TestSolution()
         # print("Relocation move",A.ID,B.ID,C.ID, rm.moveCost)
 
@@ -505,7 +505,7 @@ class TabuCustom:
                                                            secondNodeIndex,
                                                            moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
-    def ApplySwapMove(self, sm):
+    def ApplySwapMove(self, sm, tabu=True):
 
         rt1 = self.sol.routes[sm.positionOfFirstRoute]
         rt2 = self.sol.routes[sm.positionOfSecondRoute]
@@ -517,8 +517,8 @@ class TabuCustom:
         a2 = rt2.sequenceOfNodes[sm.positionOfSecondNode - 1]
         b2 = rt2.sequenceOfNodes[sm.positionOfSecondNode]
         c2 = rt2.sequenceOfNodes[sm.positionOfSecondNode + 1]
-
-        self.SetTabuIteratorForSwaps(a1.ID, b1.ID, c1.ID, a2.ID, b2.ID, c2.ID)
+        if tabu:
+            self.SetTabuIteratorForSwaps(a1.ID, b1.ID, c1.ID, a2.ID, b2.ID, c2.ID)
 
         rt1.sequenceOfNodes[sm.positionOfFirstNode] = b2
         rt2.sequenceOfNodes[sm.positionOfSecondNode] = b1
@@ -964,7 +964,7 @@ class TabuCustom:
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
 
-    def TabuSearch(self, operator):
+    def TabuSearch(self, operator,shake=False):
         solution_cost_trajectory = []
         random.seed(2)
         self.bestSolution = self.cloneSolution(self.sol)
@@ -975,6 +975,10 @@ class TabuCustom:
         top: TwoOptMove = TwoOptMove()
         stwom: SwapTwoWithOneMove = SwapTwoWithOneMove()
         SolDrawer.draw(0, self.sol, self.allNodes)
+
+        if shake:
+            not_changed_iterator = 0
+            shaking_flag = 500
 
         while terminationCondition is False:
             operator = random.randint(0, 4)
@@ -988,32 +992,17 @@ class TabuCustom:
                 self.find_best_relocation_move_max_and_other(rm)
                 if rm.originRoutePosition is not None:
                     self.ApplyRelocationMove(rm)
-                    # In case we wanna do checks for relocations replace the above with the one in the comments
-                #           if operator == 0:
-                # self.find_best_relocation_move_max_and_other(rm)
-                # if rm.originRoutePosition is not None:
-                #     print("Relocation Move: Took Node with index :",rm.originNodePosition," from route with index:",rm.originRoutePosition )
-                #     print("Relocation Move: Will insert after Node with index:",rm.targetNodePosition," to route with index:",rm.targetRoutePosition )
-                #     for i in range(len(self.sol.routes)):
-                #         if (i == rm.originRoutePosition):
-                #             print("Origin Route",self.sol.routes[i])
-                #         if(i==rm.targetRoutePosition):
-                #             print("Target Route",self.sol.routes[i])
-                #     self.ApplyRelocationMove(rm)
-                #     for i in range(len(self.sol.routes)):
-                #         if (i == rm.originRoutePosition):
-                #             print("New origin Route",self.sol.routes[i])
-                #         if(i==rm.targetRoutePosition):
-                #             print("New Target Route",self.sol.routes[i])
             # Swaps
             elif operator == 1:
                 self.find_best_swap_move_max_and_other(sm)
                 if sm.positionOfFirstRoute is not None:
                     self.ApplySwapMove(sm)
+            # Two opt
             elif operator == 2:
                 self.FindBestTwoOptMove(top)
                 if top.positionOfFirstRoute is not None:
                     self.ApplyTwoOptMove(top)
+            # 2-1 move
             elif operator == 3:
                 self.find_best_SwapTwoWithOneMove(stwom)
                 if stwom.positionOfFirstRoute is not None:
@@ -1031,7 +1020,15 @@ class TabuCustom:
 
             if (self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route):
                 self.bestSolution = self.cloneSolution(self.sol)
-
+                if shake:
+                    not_changed_iterator = 0
+            if shake:
+                if not_changed_iterator > shaking_flag:
+                    self.shaking()
+                    shaking_flag += 200
+                    not_changed_iterator = 0
+                else:
+                    not_changed_iterator += 1
             # SolDrawer.draw(self.tabuIterator, self.sol, self.allNodes)
 
             self.addOneToIterator()
@@ -1042,6 +1039,19 @@ class TabuCustom:
         # SolDrawer.drawTrajectory(solution_cost_trajectory)
 
         self.sol = self.bestSolution
+
+    def shaking(self):
+        i = 0
+        while i < 15:
+            x = random.randint(0, 1)
+            if x == 0:
+                f = self.do_a_random_relocation()
+            elif x == 1:
+                f = self.do_a_random_swap()
+            else:
+                f = self.do_a_random_two_opt()
+            if f:
+                i += 1
 
     def addOneToIterator(self):
         self.tabuIterator += 1
@@ -1660,3 +1670,136 @@ class TabuCustom:
         self.SetArcAsTabu(c1_id, d1_id)
         self.SetArcAsTabu(a2_id, b2_id)
         self.SetArcAsTabu(c2_id, d2_id)
+    def do_a_random_relocation(self):
+        relocation_move = RelocationMove()
+
+        route1_index = random.randint(0, 24)
+        route1 = self.sol.routes[route1_index]
+        route2_index = random.randint(0, 24)
+        route2 = self.sol.routes[route2_index]
+        origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
+        target_node_index = random.randint(0, len(route2.sequenceOfNodes) - 2)
+        if route1_index == route2_index and \
+                (target_node_index == origin_node_index or target_node_index == origin_node_index - 1):
+            # If the relocation will be done on the same Route
+            # If the origin and target Node are the same OR the target Node equals the last Node (the Depot) then continue
+            return False
+
+        A = route1.sequenceOfNodes[origin_node_index - 1]
+        B = route1.sequenceOfNodes[origin_node_index]
+        C = route1.sequenceOfNodes[origin_node_index + 1]
+
+        F = route2.sequenceOfNodes[target_node_index]
+        G = route2.sequenceOfNodes[target_node_index + 1]
+
+        if route1_index != route2_index:  # If the routes are diferrent
+            if route2.load + B.demand > route2.capacity:  # if the capacity constrains are violated then continue
+                return False
+
+        route1_cost_change = self.time_matrix[A.ID][C.ID] - self.time_matrix[A.ID][B.ID] - \
+                             self.time_matrix[B.ID][
+                                 C.ID]
+        route2_cost_change = self.time_matrix[F.ID][B.ID] + self.time_matrix[B.ID][G.ID] - \
+                             self.time_matrix[F.ID][G.ID]
+
+        move_cost = route1_cost_change + route2_cost_change
+        self.StoreBestRelocationMove(route1_index, route2_index, origin_node_index,
+                                     target_node_index, move_cost, route1_cost_change,
+                                     route2_cost_change, relocation_move)
+        self.ApplyRelocationMove(relocation_move,False)
+        return True
+
+    def do_a_random_swap(self):
+        swap_move = SwapMove()
+
+        route1_index = random.randint(0, 24)
+        route1 = self.sol.routes[route1_index]
+        route2_index = random.randint(0, 24)
+        route2 = self.sol.routes[route2_index]
+        origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
+        target_node_index = random.randint(1, len(route2.sequenceOfNodes) - 2)
+        # nodes of the first route
+        a1 = route1.sequenceOfNodes[origin_node_index - 1]
+        b1 = route1.sequenceOfNodes [origin_node_index]
+        c1 = route1.sequenceOfNodes[origin_node_index + 1]
+
+        # nodes of the second route
+        a2 = route2.sequenceOfNodes[target_node_index - 1]
+        b2 = route2.sequenceOfNodes[target_node_index]
+        c2 = route2.sequenceOfNodes[target_node_index + 1]
+
+        costChangeFirstRoute = None
+        costChangeSecondRoute = None
+
+        if route1_index == route2_index:  # if the routes are same
+            if origin_node_index == target_node_index - 1:  # if the first node is behind the second node
+                costRemoved = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][b2.ID] + \
+                              self.time_matrix[b2.ID][c2.ID]
+                costAdded = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][b1.ID] + \
+                            self.time_matrix[b1.ID][c2.ID]
+
+                moveCost = costAdded - costRemoved
+
+            else:
+                costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+                costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+                costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+                costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+
+                moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+        else:
+            if route1.load - b1.demand + b2.demand > self.capacity:
+                return False
+            if route2.load - b2.demand + b1.demand > self.capacity:
+                return False
+
+            costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
+            costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
+            costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
+            costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
+
+            costChangeFirstRoute = costAdded1 - costRemoved1
+            costChangeSecondRoute = costAdded2 - costRemoved2
+            moveCost = costChangeFirstRoute + costChangeSecondRoute
+
+        self.StoreBestSwapMove(route1_index, route2_index, origin_node_index, target_node_index,
+                                   moveCost, costChangeFirstRoute, costChangeSecondRoute, swap_move)
+        self.ApplySwapMove(swap_move,False)
+        return True
+
+    def do_a_random_two_opt(self):
+        two_opt_move = TwoOptMove()
+
+        route1_index = random.randint(0, 24)
+        route1 = self.sol.routes[route1_index]
+        route2_index = random.randint(0, 24)
+        route2 = self.sol.routes[route2_index]
+        origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
+        target_node_index = random.randint(1, len(route2.sequenceOfNodes) - 2)
+
+        A = route1.sequenceOfNodes[origin_node_index]  # the starting node of the intersection
+        B = route1.sequenceOfNodes[origin_node_index + 1]  # the next node of the starting node
+        K = route2.sequenceOfNodes[target_node_index]  # the node that we land to continue the sequence after resolving the intersection
+        L = route2.sequenceOfNodes[target_node_index + 1]  # the next node of node K
+
+        if route1_index == route2_index:
+            if origin_node_index == 0 and target_node_index == len(route1.sequenceOfNodes) - 2:
+                return False
+            costAdded = self.time_matrix[A.ID][K.ID] + self.time_matrix[B.ID][L.ID]
+            costRemoved = self.time_matrix[A.ID][B.ID] + self.time_matrix[K.ID][L.ID]
+            moveCost = costAdded - costRemoved
+
+        else:
+            if origin_node_index == 0 and target_node_index == 0:
+                return False
+            if origin_node_index == len(route1.sequenceOfNodes) - 2 and target_node_index == len(route2.sequenceOfNodes) - 2:
+                return False
+
+            if self.CapacityIsViolated(route1, origin_node_index, route2, target_node_index):
+                return False
+
+            moveCost = self.RouteCostCheck(route1, route2, origin_node_index, target_node_index)
+
+        self.StoreBestTwoOptMove(route1_index, route2_index, origin_node_index, target_node_index, moveCost, two_opt_move)
+        self.ApplyTwoOptMove(two_opt_move)
+        return True
