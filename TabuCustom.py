@@ -67,7 +67,7 @@ class TwoOptMove(object):
 
 class TabuCustom:
 
-    def __init__(self, minIns, tabuWithReservoir = False):
+    def __init__(self, minIns, tabuWithReservoir=False):
         # m is the model, siders_constant, siders_constant2 (the second is optional) are numbers that define how
         # important is it for an insertion not to increase the min_max cost of the solution
         self.allNodes = minIns.allNodes
@@ -179,8 +179,9 @@ class TabuCustom:
                 # if self.MoveIsTabuForRelocations(F.ID, B.ID, G.ID):
                 #     continue
                 if (move_cost < relocation_move.moveCost
-                    or (self.tabuWithResevoir and move_cost == relocation_move.moveCost and random.random() < 1/moves_with_same_cost))\
-                    and abs(move_cost) > 0.0001:
+                    or (
+                            self.tabuWithResevoir and move_cost == relocation_move.moveCost and random.random() < 1 / moves_with_same_cost)) \
+                        and abs(move_cost) > 0.0001:
                     if move_cost == relocation_move.moveCost:
                         moves_with_same_cost += 1
                     else:
@@ -189,7 +190,6 @@ class TabuCustom:
                     self.StoreBestRelocationMove(max_route_index, route2_index, originNodeIndex,
                                                  targetNodeIndex, move_cost, max_route_cost_change,
                                                  route2_cost_change, relocation_move)
-
 
     def find_best_relocation_for_two_routes_not_max_route(self, relocation_move, route1_index, route2_index):
         route1: Route = self.sol.routes[route1_index]
@@ -233,7 +233,8 @@ class TabuCustom:
                     continue
 
                 if (move_cost < relocation_move.moveCost or
-                     (self.tabuWithResevoir and move_cost == relocation_move.moveCost and random.random() < 1 / moves_with_same_cost)) \
+                    (
+                            self.tabuWithResevoir and move_cost == relocation_move.moveCost and random.random() < 1 / moves_with_same_cost)) \
                         and abs(move_cost) > 0.0001:
                     if move_cost == relocation_move.moveCost:
                         moves_with_same_cost += 1
@@ -370,7 +371,8 @@ class TabuCustom:
                     #     continue
 
                     if (moveCost < sm.moveCost or
-                        (self.tabuWithResevoir and moveCost == sm.moveCost and random.random() < 1 / moves_with_same_cost)) \
+                        (
+                                self.tabuWithResevoir and moveCost == sm.moveCost and random.random() < 1 / moves_with_same_cost)) \
                             and abs(moveCost) > 0.0001:
                         if moveCost == sm.moveCost:
                             moves_with_same_cost += 1
@@ -454,7 +456,8 @@ class TabuCustom:
                                     continue
 
                                 if (moveCost < sm.moveCost or
-                                    (self.tabuWithResevoir and moveCost == sm.moveCost and random.random() < 1 / moves_with_same_cost)) \
+                                    (
+                                            self.tabuWithResevoir and moveCost == sm.moveCost and random.random() < 1 / moves_with_same_cost)) \
                                         and abs(moveCost) > 0.0001:
                                     if moveCost == sm.moveCost:
                                         moves_with_same_cost += 1
@@ -491,8 +494,6 @@ class TabuCustom:
             rt2.load = rt2.load + b1.demand - b2.demand
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
-
-
 
         self.TestSolution()
         unpack = self.FindRouteWithMaxCost()
@@ -948,6 +949,23 @@ class TabuCustom:
                 self.find_best_relocation_move_max_and_other(rm)
                 if rm.originRoutePosition is not None:
                     self.ApplyRelocationMove(rm)
+                    # In case we wanna do checks for relocations replace the above with the one in the comments
+                #           if operator == 0:
+                # self.find_best_relocation_move_max_and_other(rm)
+                # if rm.originRoutePosition is not None:
+                #     print("Relocation Move: Took Node with index :",rm.originNodePosition," from route with index:",rm.originRoutePosition )
+                #     print("Relocation Move: Will insert after Node with index:",rm.targetNodePosition," to route with index:",rm.targetRoutePosition )
+                #     for i in range(len(self.sol.routes)):
+                #         if (i == rm.originRoutePosition):
+                #             print("Origin Route",self.sol.routes[i])
+                #         if(i==rm.targetRoutePosition):
+                #             print("Target Route",self.sol.routes[i])
+                #     self.ApplyRelocationMove(rm)
+                #     for i in range(len(self.sol.routes)):
+                #         if (i == rm.originRoutePosition):
+                #             print("New origin Route",self.sol.routes[i])
+                #         if(i==rm.targetRoutePosition):
+                #             print("New Target Route",self.sol.routes[i])
             # Swaps
             elif operator == 1:
                 self.find_best_swap_move_max_and_other(sm)
@@ -994,15 +1012,13 @@ class TabuCustom:
     def MoveIsTabuForRelocations(self, f_id, b_id, g_id):
         return self.IsArcTabu(f_id, b_id) or self.IsArcTabu(b_id, g_id)
 
-
     def SetTabuForRelocations(self, a_id, b_id, c_id):  # used to take 3 arguments
         self.SetArcAsTabu(a_id, b_id)
         self.SetArcAsTabu(b_id, c_id)
 
     def MoveIsTabuForSwaps(self, a1_id, b1_id, c1_id, a2_id, b2_id, c2_id):
-       return self.IsArcTabu(a1_id, b2_id) or self.IsArcTabu(b2_id, c1_id) or \
-                self.IsArcTabu(a2_id, b1_id) or self.IsArcTabu(b1_id, c2_id)
-
+        return self.IsArcTabu(a1_id, b2_id) or self.IsArcTabu(b2_id, c1_id) or \
+               self.IsArcTabu(a2_id, b1_id) or self.IsArcTabu(b1_id, c2_id)
 
     def SetTabuIteratorForSwaps(self, a1_id, b1_id, c1_id, a2_id, b2_id, c2_id):
         self.SetArcAsTabu(a1_id, b1_id)
@@ -1023,7 +1039,7 @@ class TabuCustom:
 
     def IsArcTabu(self, node1_id, node2_id):
         return self.TabuForbiddenArcs[node1_id][node2_id] > self.tabuIterator
-    
+
     def changetwoNeighboorsOfMaxRoute(self):
         unpack = self.FindRouteWithMaxCost()  # find the Route with the max cost and its index in the routes matrix
         max_route_index = unpack[0]  # unpack index
@@ -1033,11 +1049,11 @@ class TabuCustom:
 
         sm = SwapMove()
         sm.Initialize()
-        for firstNodeIndex in range(1,len(max_route.sequenceOfNodes) - 1):
-            for secondNodeIndex in range(len(max_route.sequenceOfNodes)-2,1,-1):
-                if(secondNodeIndex -1 <= firstNodeIndex):
+        for firstNodeIndex in range(1, len(max_route.sequenceOfNodes) - 1):
+            for secondNodeIndex in range(len(max_route.sequenceOfNodes) - 2, 1, -1):
+                if (secondNodeIndex - 1 <= firstNodeIndex):
                     continue
-                if(firstNodeIndex+1 >= secondNodeIndex):
+                if (firstNodeIndex + 1 >= secondNodeIndex):
                     continue
                 a1 = max_route.sequenceOfNodes[firstNodeIndex - 1]
                 b1 = max_route.sequenceOfNodes[firstNodeIndex]
@@ -1046,17 +1062,18 @@ class TabuCustom:
                 a2 = max_route.sequenceOfNodes[secondNodeIndex - 1]
                 b2 = max_route.sequenceOfNodes[secondNodeIndex]
                 c2 = max_route.sequenceOfNodes[secondNodeIndex + 1]
-    
-            if((self.time_matrix[b1.ID][c2.ID] + self.time_matrix[c1.ID][b2.ID]) < (self.time_matrix[b1.ID][c1.ID]+self.time_matrix[b2.ID][c2.ID])):
-                
+
+            if ((self.time_matrix[b1.ID][c2.ID] + self.time_matrix[c1.ID][b2.ID]) < (
+                    self.time_matrix[b1.ID][c1.ID] + self.time_matrix[b2.ID][c2.ID])):
+
                 costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
                 costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
                 costRemoved2 = self.time_matrix[a2.ID][b2.ID] + self.time_matrix[b2.ID][c2.ID]
                 costAdded2 = self.time_matrix[a2.ID][b1.ID] + self.time_matrix[b1.ID][c2.ID]
 
                 moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
-                self.StoreBestSwapMove(max_route_index, max_route_index, firstNodeIndex, secondNodeIndex,moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
+                self.StoreBestSwapMove(max_route_index, max_route_index, firstNodeIndex, secondNodeIndex, moveCost,
+                                       costChangeFirstRoute, costChangeSecondRoute, sm)
                 if sm.positionOfFirstRoute is not None:
                     if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
                         self.ApplySwapMove(sm)
-                        
