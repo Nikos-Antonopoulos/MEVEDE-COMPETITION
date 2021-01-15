@@ -265,7 +265,7 @@ class TabuCustom:
                                                  targetNodeIndex, move_cost, route1_cost_change,
                                                  route2_cost_change, relocation_move)
 
-    def ApplyRelocationMove(self, rm: RelocationMove,tabu=True):
+    def ApplyRelocationMove(self, rm: RelocationMove):
 
         originRt = self.sol.routes[rm.originRoutePosition]  # origin route of the node to be relocated
         targetRt = self.sol.routes[rm.targetRoutePosition]  # target route of the node to be relocated
@@ -299,8 +299,9 @@ class TabuCustom:
             targetRt.load += B.demand
 
         self.sol.max_cost_of_route = self.CalculateMaxCostOfRoute()  # find the new max cost after the relocation
-        if tabu:
-            self.SetTabuForRelocations(A.ID, B.ID, C.ID)
+
+        self.SetTabuForRelocations(A.ID, B.ID, C.ID)
+
         self.TestSolution()
         # print("Relocation move",A.ID,B.ID,C.ID, rm.moveCost)
 
@@ -487,7 +488,7 @@ class TabuCustom:
                                                            secondNodeIndex,
                                                            moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
-    def ApplySwapMove(self, sm, tabu=True):
+    def ApplySwapMove(self, sm):
 
         rt1 = self.sol.routes[sm.positionOfFirstRoute]
         rt2 = self.sol.routes[sm.positionOfSecondRoute]
@@ -499,8 +500,8 @@ class TabuCustom:
         a2 = rt2.sequenceOfNodes[sm.positionOfSecondNode - 1]
         b2 = rt2.sequenceOfNodes[sm.positionOfSecondNode]
         c2 = rt2.sequenceOfNodes[sm.positionOfSecondNode + 1]
-        if tabu:
-            self.SetTabuIteratorForSwaps(a1.ID, b1.ID, c1.ID, a2.ID, b2.ID, c2.ID)
+
+        self.SetTabuIteratorForSwaps(a1.ID, b1.ID, c1.ID, a2.ID, b2.ID, c2.ID)
 
         rt1.sequenceOfNodes[sm.positionOfFirstNode] = b2
         rt2.sequenceOfNodes[sm.positionOfSecondNode] = b1
@@ -964,7 +965,7 @@ class TabuCustom:
 
         while terminationCondition is False:
             operator = random.randint(0, 3)
-
+            old_op = operator
             rm.Initialize()
             sm.Initialize()
             top.Initialize()
@@ -1002,6 +1003,7 @@ class TabuCustom:
                     not_changed_iterator = 0
             if shake:
                 if not_changed_iterator > shaking_flag:
+                    print("SHAKING",not_changed_iterator)
                     self.shaking()
                     shaking_flag += 200
                     not_changed_iterator = 0
@@ -1469,7 +1471,7 @@ class TabuCustom:
         self.StoreBestRelocationMove(route1_index, route2_index, origin_node_index,
                                      target_node_index, move_cost, route1_cost_change,
                                      route2_cost_change, relocation_move)
-        self.ApplyRelocationMove(relocation_move,False)
+        self.ApplyRelocationMove(relocation_move)
         return True
 
     def do_a_random_swap(self):
@@ -1527,7 +1529,7 @@ class TabuCustom:
 
         self.StoreBestSwapMove(route1_index, route2_index, origin_node_index, target_node_index,
                                    moveCost, costChangeFirstRoute, costChangeSecondRoute, swap_move)
-        self.ApplySwapMove(swap_move,False)
+        self.ApplySwapMove(swap_move)
         return True
 
     def do_a_random_two_opt(self):
