@@ -1,9 +1,10 @@
 from VRPMinimumInsertions import *
-import pprint
+import pprint,time
 
 m = Model()
 m.BuildModel()
 best = 100
+start=time.time()
 for i in range(28, 29):
     s = SolverMinIns(m, 2.5, 0.25)
     sol = s.solve(2)
@@ -13,5 +14,5 @@ for i in range(28, 29):
 
 
 
-
-
+end=time.time()
+print((end-start)/60)
