@@ -1,0 +1,105 @@
+#from VRP_Model import *
+#from VRPMinimumInsertions import *
+#from SolutionDrawer import *
+#from Swaps import *
+#from Relocations import *
+import random,pprint, math
+
+class Model:
+    def __init__(self): # markou, sider
+        self.all_nodes = []  # All the nodes that are included in the model plus the depot
+        self.service_locations = []  # All the locations that have to be served
+        self.time_matrix = []  # Time Matrix created from the distance matrix and the node type.
+        self.capacity = 3000  # Capacity of the Vehicles measured in kg (3tn).
+        self.unloading_time_per_type = { # the time that each type of node needs to unload
+            0 : 0,
+            1 : 5,
+            2 : 15,
+            3 : 25
+        }
+
+    routes = [[0, 1, 50, 65, 101, 130, 150, 165, 183],
+                [0, 2, 46, 74, 77, 96, 120, 146, 179],
+                [0, 3, 34, 72, 104, 123, 145, 162, 194],
+                [0, 4, 40, 80, 103, 138, 163, 175, 198],
+                [0, 5, 49, 59, 70, 98, 106, 140, 166, 19],
+                [0, 6, 36, 62, 91, 107, 131, 178],
+                [0, 7, 33, 73, 99, 105, 126, 153, 169],
+                [0, 8, 47, 78, 115, 143, 167, 193],
+                [0, 9, 39, 61, 90, 100, 108, 119, 133, 159, 177, 187],
+                [0, 10, 51, 75, 85, 102, 127, 154, 173],
+                [0, 11, 48, 82, 111, 142, 156, 184],
+                [0, 12, 30, 41, 69, 93, 125, 151, 164],
+                [0, 13, 38, 79, 94, 141, 158, 196, 199],
+                [0, 14, 29, 60, 88, 117, 135, 155, 180, 200],
+                [0, 15, 43, 57, 95, 124, 148, 181, 189],
+                [0, 16, 52, 87, 122, 160, 192],
+                [0, 17, 27, 44, 76, 112, 137, 171, 188],
+                [0, 18, 31, 56, 64, 86, 116, 149, 174, 185],
+                [0, 19, 28, 55, 71, 110, 129, 168],
+                [0, 20, 32, 58, 84, 114, 147, 170, 191],
+                [0, 21, 37, 53, 67, 97, 144, 161, 197],
+                [0, 22, 35, 81, 118, 136, 157, 190],
+                [0, 23, 42, 68, 89, 128, 139, 176, 186],
+                [0, 24, 54, 92, 113, 134, 152, 182],
+                [0, 25, 26, 45, 63, 66, 83, 109, 121, 132, 172]]
+
+    def CalculateMaxSolutionCost(self, routes, dist_matrix): #calculates manually the max cost of a given solution
+    
+        routes_times = [] #here we store the cost of each route in terms of time
+        
+        for i in range(0, len(routes)):
+
+            total_route_distance = 0 #here we store the distance of each route
+
+            for j in range(0, len(routes[i]) - 1):
+
+                total_route_distance += dist_matrix[routes[i][j]][routes[i][j + 1]] #here we calculate the distance of each route manually
+
+                total_route_time_without_unload = total_route_distance/35 #converting distance to time
+
+                unload_time = self.unloading_time_per_type(self.allNodes(routes[i][j + 1]).type)
+
+                total_route_time = total_route_time_without_unload + unload_time #adding the unload cost using the type of each node
+
+                routes_times.append(total_route_time) #storing the manually calculated time of every route of the given solution
+
+        return max(routes_times) #return the max time (cost) of the solution
+
+class Node:
+    def __init__(self, id, tp, dem, xx, yy):
+        self.id = id
+        self.type = tp
+        self.demand = dem
+        self.x = xx
+        self.y = yy
+
+all_nodes = []
+service_locations = []
+depot = Node(0, 0, 0, 50, 50)
+all_nodes.append(depot)
+random.seed(1)
+for i in range(0, 200):
+    id = i + 1
+    tp = random.randint(1,3)
+    dem = random.randint(1,5) * 100
+    xx = random.randint(0, 100)
+    yy = random.randint(0, 100)
+    serv_node = Node(id, tp, dem, xx, yy)
+    all_nodes.append(serv_node)
+    service_locations.append(serv_node) 
+
+
+dist_matrix = [[0.0 for j in range(0, len(all_nodes))] for k in range(0, len(all_nodes))]
+for i in range(0, len(all_nodes)):
+    for j in range(0, len(all_nodes)):
+        source = all_nodes[i]
+        target = all_nodes[j]
+        dx_2 = (source.x - target.x)**2
+        dy_2 = (source.y - target.y) ** 2
+        dist = round(math.sqrt(dx_2 + dy_2))
+        dist_matrix[i][j] = dist 
+
+#take the type of each node
+
+print(Model.CalculateMaxSolutionCost(routes, dist_matrix))

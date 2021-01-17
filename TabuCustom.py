@@ -1038,8 +1038,9 @@ class TabuCustom:
 
             self.addOneToIterator()
 
-            if self.tabuIterator > 13000:
+            if self.tabuIterator > 13:
                 terminationCondition = True
+                self.write_to_file()
         SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
         SolDrawer.drawTrajectory(solution_cost_trajectory)
 
@@ -1855,3 +1856,16 @@ class TabuCustom:
                     five_max_routes.remove(min_route)
                     five_max_routes.append(i)
         return five_max_routes
+   
+    def write_to_file(self):
+        with open("sol_8180067.txt", "w") as f:
+            f.write('%a' % self.bestSolution.max_cost_of_route)
+            f.write("\n")
+            for j in self.bestSolution.routes:
+                for i in j.sequenceOfNodes[:-1]:
+                    if(i!=j.sequenceOfNodes[-2]):
+                        f.write('%d,' % i.ID)
+                    else: 
+                        f.write('%d'% i.ID)
+
+                f.write("\n")
