@@ -967,7 +967,7 @@ class TabuCustom:
 
     def TabuSearch(self, operator,shake=False):
         solution_cost_trajectory = []
-        random.seed(5)
+        random.seed(67)
         self.bestSolution = self.cloneSolution(self.sol)
         terminationCondition = False
 
@@ -1038,13 +1038,14 @@ class TabuCustom:
 
             self.addOneToIterator()
 
-            if self.tabuIterator > 13:
+            if self.tabuIterator > 5000:
                 terminationCondition = True
                 self.write_to_file()
         SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
         SolDrawer.drawTrajectory(solution_cost_trajectory)
 
         self.sol = self.bestSolution
+
 
     def shaking(self):
         i = 0

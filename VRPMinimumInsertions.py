@@ -49,7 +49,7 @@ class SolverMinIns:
         # reloc = Relocations(self)
         # reloc.solveRelocations()
         tabu = TabuCustom.TabuCustom(self)
-        tabu.solveTabu()
+        self.sol = tabu.solveTabu()
 
 
 
@@ -61,7 +61,7 @@ class SolverMinIns:
         for i in range(0, len(sol.routes)):
             rt = sol.routes[i]
             for j in range (0, len(rt.sequenceOfNodes)):
-                print(rt.sequenceOfNodes[j].ID, end=' ')
+                print(rt.sequenceOfNodes[j].ID, end=', ')
             print(rt.cost)
         print (self.sol.max_cost_of_route )
 

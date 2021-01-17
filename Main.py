@@ -11,7 +11,8 @@ for i in range(0,1):
     if sol.max_cost_of_route < best:
         best = sol.max_cost_of_route
         best_i = i
-    print(sol.max_cost_of_route)
+
+s.ReportSolution(sol)
 
 
 end=time.time()
