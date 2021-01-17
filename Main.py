@@ -7,7 +7,7 @@ best = 100
 start=time.time()
 for i in range(0,1):
     s = SolverMinIns(m, 4.5, 1)
-    sol = s.solve(6)
+    sol = s.solve()
     if sol.max_cost_of_route < best:
         best = sol.max_cost_of_route
         best_i = i

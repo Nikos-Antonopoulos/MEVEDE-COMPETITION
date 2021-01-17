@@ -965,9 +965,9 @@ class TabuCustom:
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
 
-    def TabuSearch(self, operator,shake=True):
+    def TabuSearch(self, operator,shake=False):
         solution_cost_trajectory = []
-        random.seed(19)
+        random.seed(5)
         self.bestSolution = self.cloneSolution(self.sol)
         terminationCondition = False
 
@@ -982,7 +982,7 @@ class TabuCustom:
             shaking_flag = 1000
 
         while terminationCondition is False:
-            operator = random.randint(0, 4)
+            operator = random.randint(0, 2)
 
             rm.Initialize()
             sm.Initialize()
