@@ -965,9 +965,9 @@ class TabuCustom:
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
 
-    def TabuSearch(self, operator,shake=False):
+    def TabuSearch(self, operator,shake=True):
         solution_cost_trajectory = []
-        random.seed(29)
+        random.seed(19)
         self.bestSolution = self.cloneSolution(self.sol)
         terminationCondition = False
 
@@ -979,7 +979,7 @@ class TabuCustom:
         #SolDrawer.draw(0, self.sol, self.allNodes)
         if shake:
             not_changed_iterator = 0
-            shaking_flag = 600
+            shaking_flag = 1000
 
         while terminationCondition is False:
             operator = random.randint(0, 4)
@@ -1038,7 +1038,7 @@ class TabuCustom:
 
             self.addOneToIterator()
 
-            if self.tabuIterator > 5000:
+            if self.tabuIterator > 13000:
                 terminationCondition = True
         SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
         SolDrawer.drawTrajectory(solution_cost_trajectory)
@@ -1677,8 +1677,8 @@ class TabuCustom:
         self.SetArcAsTabu(c2_id, d2_id)
     def do_a_random_relocation(self):
         relocation_move = RelocationMove()
-
-        route1_index = random.randint(0, 24)
+        five_max = self.FindFiveRoutesWithMaxCost()
+        route1_index = random.choice(five_max)
         route1 = self.sol.routes[route1_index]
 
         if len(route1.sequenceOfNodes) == 2:
@@ -1725,8 +1725,8 @@ class TabuCustom:
 
     def do_a_random_swap(self):
         swap_move = SwapMove()
-
-        route1_index = random.randint(0, 24)
+        five_max = self.FindFiveRoutesWithMaxCost()
+        route1_index = random.choice(five_max)
         route1 = self.sol.routes[route1_index]
         route2_index = random.randint(0, 24)
         route2 = self.sol.routes[route2_index]
@@ -1794,7 +1794,8 @@ class TabuCustom:
     def do_a_random_two_opt(self):
         two_opt_move = TwoOptMove()
 
-        route1_index = random.randint(0, 24)
+        five_max = self.FindFiveRoutesWithMaxCost()
+        route1_index = random.choice(five_max)
         route1 = self.sol.routes[route1_index]
         route2_index = random.randint(0, 24)
         route2 = self.sol.routes[route2_index]
@@ -1837,3 +1838,20 @@ class TabuCustom:
         self.StoreBestTwoOptMove(route1_index, route2_index, origin_node_index, target_node_index, moveCost, two_opt_move)
         self.ApplyTwoOptMove(two_opt_move)
         return True
+
+    def FindFiveRoutesWithMaxCost(self):
+        five_max_routes = []
+        for i in range(len(self.sol.routes)):
+            if len(five_max_routes) < 5:
+                five_max_routes.append(i)
+            else:
+                min_route = None
+                min_cost = 10**9
+                for route_in_list in five_max_routes:
+                    if self.sol.routes[route_in_list].cost < min_cost:
+                        min_route = route_in_list
+                        min_cost = self.sol.routes[min_route].cost
+                if self.sol.routes[i].cost > min_cost:
+                    five_max_routes.remove(min_route)
+                    five_max_routes.append(i)
+        return five_max_routes

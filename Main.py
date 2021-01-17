@@ -5,13 +5,13 @@ m = Model()
 m.BuildModel()
 best = 100
 start=time.time()
-for i in range(28, 29):
-    s = SolverMinIns(m, 2.5, 0.25)
-    sol = s.solve(2)
+for i in range(0,1):
+    s = SolverMinIns(m, 4.5, 1)
+    sol = s.solve(6)
     if sol.max_cost_of_route < best:
         best = sol.max_cost_of_route
         best_i = i
-
+    print(sol.max_cost_of_route)
 
 
 end=time.time()

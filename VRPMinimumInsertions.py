@@ -38,9 +38,8 @@ class SolverMinIns:
                                                # see find_best_insertion_for_customer for the use
         self.siders_constant2 = siders_constant2
 
-    def solve(self, seed= 1 , with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
+    def solve(self, with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
-        random.seed(seed)
         self.SetRoutedFlagToFalseForAllCustomers()
         self.minimum_insertions_with_opened_routes(with_sort)
         print("start", self.sol.max_cost_of_route)
@@ -50,12 +49,12 @@ class SolverMinIns:
         # reloc = Relocations(self)
         # reloc.solveRelocations()
         tabu = TabuCustom.TabuCustom(self)
-        tabu.solveCombined()
+        tabu.solveTabu()
 
 
 
         # self.ReportSolution(self.sol)
-        # SolDrawer.draw(seed, self.sol, self.allNodes)
+        # SolDrawer.draw(self.sol, self.allNodes)
         return self.sol
 
     def ReportSolution(self, sol):
@@ -132,13 +131,7 @@ class SolverMinIns:
             self.sol.routes.append(rt)  # the new route gets added to the solution
 
     def identify_best_insertion_in_all_routes(self, best_insertion):
-        insertions_with_same_subj_cost = 2 # used for reservoir sampling, it is the number of the insertions with the
-                                           # same subjective cost at the time of the choice and
-                                           # 1/insertions_with_the_same_subj_cost is the probability that a
-                                           # best_insertion_for_customer with the same subjective cost as
-                                           # the current best_insertion will replace it.
-                                           # It is initialized to 2 because the first time the sampling is used, there
-                                           # are 2 insertions with the same subjective cost
+
         for i in range(len(self.customers)): # iterate all customers
             candidate_cust: Node = self.customers[i] # the current checking customer
             if candidate_cust.isRouted is False: # if the customer is not routed
@@ -146,22 +139,13 @@ class SolverMinIns:
                 self.find_best_insertion_for_customer(candidate_cust, best_insertion_for_customer) # finds the best
                                                                                                    # insertion for the
                                                                                                    # particular customer
-                if best_insertion_for_customer.subjective_cost < best_insertion.subjective_cost or \
-                        (best_insertion.subjective_cost == best_insertion_for_customer.subjective_cost #same subj_cost
-                         and random.random() < 1/insertions_with_same_subj_cost # random choice using reservoir sampling
-                        and len(best_insertion_for_customer.route.sequenceOfNodes) > 2): # don't take into consideration
+                if best_insertion_for_customer.subjective_cost < best_insertion.subjective_cost: # don't take into consideration
                                                                                       # the cases where routes contain
                                                                                       # nothing more than depot
                     # if the best insertion of the checking customer is better than the best insertion at this moment
                     # according to the subjective cost (the cost that takes into account how the new insertion affects
                     # the min max cost of the solution)
                     # the fields of bestInsertion will be updated according to the new best insertion found
-                    if best_insertion.subjective_cost == best_insertion_for_customer.subjective_cost:
-                        insertions_with_same_subj_cost += 1 # + 1 because another insertion with the same cost with the
-                                                            # best_insertion was found
-                    else:
-                        insertions_with_same_subj_cost = 2 # if a new best_insertion is found initialize
-                                                           # insertions_with_same_subj_cost back to 2
                     best_insertion.customer = best_insertion_for_customer.customer
                     best_insertion.route = best_insertion_for_customer.route
                     best_insertion.cost = best_insertion_for_customer.cost
@@ -182,7 +166,7 @@ class SolverMinIns:
                         B.ID]  # the cost of the connection that broke (it will be reduced from the trialCost)
                     trial_cost = cost_added - cost_removed  # how the cost changed after the insertion
 
-                    subjective_cost_of_insertion = trial_cost + 5*random.random()/10# if the new insertion does not affect the min max cost
+                    subjective_cost_of_insertion = trial_cost # if the new insertion does not affect the min max cost
                                                              # of the solution, then subjective_cost equals trial_cost
 
                     # if the new cost of the route (route.cost + trial.cost) is bigger than the current min max cost of
