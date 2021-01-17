@@ -125,7 +125,7 @@ class TabuCustom:
         self.tabuIterator = 0
         self.tabuWithResevoir = tabuWithReservoir
 
-    def solveCombined(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
+    def solveTabu(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
         # sort the self.customers
         # self.VND()
         self.TabuSearch(0,True)
@@ -321,7 +321,7 @@ class TabuCustom:
         self.SetTabuForRelocations(A.ID, B.ID, C.ID)
 
         self.TestSolution()
-        # print("Relocation move",A.ID,B.ID,C.ID, rm.moveCost)
+        #print("Relocation move",rm.originRoutePosition,rm.targetRoutePosition,B.ID, rm.moveCost)
 
     def StoreBestRelocationMove(self, originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost,
                                 originRtCostChange, targetRtCostChange, rm: RelocationMove):
@@ -536,7 +536,7 @@ class TabuCustom:
 
         self.TestSolution()
         unpack = self.FindRouteWithMaxCost()
-        # print("Swap Move",b1.ID,b2.ID, rt1 == unpack[1] or rt2 == unpack[1], sm.moveCost)
+        #print("Swap Move",b1.ID,b2.ID, rt1 == unpack[1] or rt2 == unpack[1], sm.moveCost)
 
     def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost,
                           costChangeFirstRoute, costChangeSecondRoute, sm):
@@ -967,7 +967,7 @@ class TabuCustom:
 
     def TabuSearch(self, operator,shake=False):
         solution_cost_trajectory = []
-        random.seed(2)
+        random.seed(29)
         self.bestSolution = self.cloneSolution(self.sol)
         terminationCondition = False
 
@@ -975,11 +975,11 @@ class TabuCustom:
         sm = SwapMove()
         top: TwoOptMove = TwoOptMove()
         stwom: SwapTwoWithOneMove = SwapTwoWithOneMove()
-        SolDrawer.draw(0, self.sol, self.allNodes)
-
+        stwtm: SwapTwoWithTwoMove = SwapTwoWithTwoMove()
+        #SolDrawer.draw(0, self.sol, self.allNodes)
         if shake:
             not_changed_iterator = 0
-            shaking_flag = 500
+            shaking_flag = 600
 
         while terminationCondition is False:
             operator = random.randint(0, 4)
@@ -988,6 +988,7 @@ class TabuCustom:
             sm.Initialize()
             top.Initialize()
             stwom.Initialize()
+            stwtm.Initialize()
             # Relocations
             if operator == 0:
                 self.find_best_relocation_move_max_and_other(rm)
@@ -1008,10 +1009,11 @@ class TabuCustom:
                 self.find_best_SwapTwoWithOneMove(stwom)
                 if stwom.positionOfFirstRoute is not None:
                     self.ApplySwapTwoWithOneMove(stwom)
+            # 2-2 move
             elif operator == 4:
-                self.find_best_SwapTwoWithTwoMove(stwom)
-                if stwom.positionOfFirstRoute is not None:
-                    self.ApplySwapTwoWithTwoMove(stwom)
+                self.find_best_SwapTwoWithTwoMove(stwtm)
+                if stwtm.positionOfFirstRoute is not None:
+                    self.ApplySwapTwoWithTwoMove(stwtm)
 
             # self.ReportSolution(self.sol)
             self.TestSolution()
@@ -1025,27 +1027,28 @@ class TabuCustom:
                     not_changed_iterator = 0
             if shake:
                 if not_changed_iterator > shaking_flag:
-                    print("SHAKING",not_changed_iterator)
+                    print("SHAKING")
                     self.shaking()
-                    shaking_flag += 200
+                    shaking_flag *= 2
                     not_changed_iterator = 0
                 else:
                     not_changed_iterator += 1
-            # SolDrawer.draw(self.tabuIterator, self.sol, self.allNodes)
+
+            #SolDrawer.draw(self.tabuIterator, self.sol, self.allNodes)
 
             self.addOneToIterator()
 
             if self.tabuIterator > 5000:
                 terminationCondition = True
-        # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
-        # SolDrawer.drawTrajectory(solution_cost_trajectory)
+        SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
+        SolDrawer.drawTrajectory(solution_cost_trajectory)
 
         self.sol = self.bestSolution
 
     def shaking(self):
         i = 0
-        while i < 15:
-            x = random.randint(0, 1)
+        while i < 25:
+            x = random.randint(0,2)
             if x == 0:
                 f = self.do_a_random_relocation()
             elif x == 1:
@@ -1677,10 +1680,19 @@ class TabuCustom:
 
         route1_index = random.randint(0, 24)
         route1 = self.sol.routes[route1_index]
+
+        if len(route1.sequenceOfNodes) == 2:
+            return False
+
         route2_index = random.randint(0, 24)
         route2 = self.sol.routes[route2_index]
+
         origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
-        target_node_index = random.randint(0, len(route2.sequenceOfNodes) - 2)
+        if len(route2.sequenceOfNodes) == 2:
+            target_node_index = 1
+        else:
+            target_node_index = random.randint(0, len(route2.sequenceOfNodes) - 2)
+
         if route1_index == route2_index and \
                 (target_node_index == origin_node_index or target_node_index == origin_node_index - 1):
             # If the relocation will be done on the same Route
@@ -1718,8 +1730,19 @@ class TabuCustom:
         route1 = self.sol.routes[route1_index]
         route2_index = random.randint(0, 24)
         route2 = self.sol.routes[route2_index]
+
+        if len(route1.sequenceOfNodes) == 2 or len(route2.sequenceOfNodes) == 2:
+            return False
+
         origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
         target_node_index = random.randint(1, len(route2.sequenceOfNodes) - 2)
+
+        if route1_index == route2_index:
+            if origin_node_index == target_node_index:
+                return False
+            elif origin_node_index > target_node_index:
+                origin_node_index, target_node_index = target_node_index, origin_node_index
+
         # nodes of the first route
         a1 = route1.sequenceOfNodes[origin_node_index - 1]
         b1 = route1.sequenceOfNodes [origin_node_index]
@@ -1741,7 +1764,6 @@ class TabuCustom:
                             self.time_matrix[b1.ID][c2.ID]
 
                 moveCost = costAdded - costRemoved
-
             else:
                 costRemoved1 = self.time_matrix[a1.ID][b1.ID] + self.time_matrix[b1.ID][c1.ID]
                 costAdded1 = self.time_matrix[a1.ID][b2.ID] + self.time_matrix[b2.ID][c1.ID]
@@ -1776,8 +1798,18 @@ class TabuCustom:
         route1 = self.sol.routes[route1_index]
         route2_index = random.randint(0, 24)
         route2 = self.sol.routes[route2_index]
+
+        if len(route1.sequenceOfNodes) == 2 or len(route2.sequenceOfNodes) == 2:
+            return False
+
         origin_node_index = random.randint(1, len(route1.sequenceOfNodes) - 2)
         target_node_index = random.randint(1, len(route2.sequenceOfNodes) - 2)
+
+        if route1_index == route2_index:
+            if abs(origin_node_index - target_node_index) < 2:
+                return False
+            elif origin_node_index > target_node_index:
+                origin_node_index, target_node_index = target_node_index, origin_node_index
 
         A = route1.sequenceOfNodes[origin_node_index]  # the starting node of the intersection
         B = route1.sequenceOfNodes[origin_node_index + 1]  # the next node of the starting node
