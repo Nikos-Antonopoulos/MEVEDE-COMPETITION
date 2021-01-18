@@ -117,11 +117,11 @@ class TabuCustom:
         self.capacity = minIns.capacity
         self.sol = minIns.sol
         self.bestSolution = None
-        self.searchTrajectory = []
+        # self.searchTrajectory = []
         self.bestSolution = None
         self.minTabuTenure = 10  # 10
         self.maxTabuTenure = 50  # 50
-        self.tabuTenure = 20
+        # self.tabuTenure = 20
         self.TabuForbiddenArcs = [[0 for j in range(0, 201)] for i in
                                   range(0, 201)]  # Changes to True if the arg [i,j] is Forbidden
         self.tabuIterator = 0
@@ -912,7 +912,7 @@ class TabuCustom:
 
             # self.ReportSolution(self.sol)
             # self.TestSolution()
-            solution_cost_trajectory.append(self.sol.max_cost_of_route)
+            # solution_cost_trajectory.append(self.sol.max_cost_of_route)
 
             # print(self.tabuIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
 
@@ -936,8 +936,8 @@ class TabuCustom:
             if self.tabuIterator > 5000:
                 terminationCondition = True
                 self.write_to_file()
-        SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
-        SolDrawer.drawTrajectory(solution_cost_trajectory)
+        # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
+        # SolDrawer.drawTrajectory(solution_cost_trajectory)
 
         self.sol = self.bestSolution
 
