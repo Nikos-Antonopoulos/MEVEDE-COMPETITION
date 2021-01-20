@@ -128,7 +128,7 @@ class TabuCustom:
 
 
     def solveTabu(self, seed):  # with sort variable defines if the minimum_insertions_with_opened_routes will
-        self.TabuSearch(seed, True)
+        self.TabuSearch(seed, False)
         return self.sol
 
     def FindRouteWithMaxCost(self):  # mo
@@ -933,7 +933,7 @@ class TabuCustom:
 
             self.addOneToIterator()
 
-            if self.tabuIterator > 13000:
+            if self.tabuIterator > 10000:
                 terminationCondition = True
                 self.write_to_file()
         # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)

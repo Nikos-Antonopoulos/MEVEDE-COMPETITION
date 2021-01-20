@@ -6,10 +6,10 @@ m.BuildModel()
 start = time.time()
 
 
-for i in range(8, 32):
-    for j in range(1, 8):
+for i in range(2, 7):
+    for j in range(0, 3):
         for seed in range(101, 111):
-            s = SolverMinIns(m, i/4, j/4)
+            s = SolverMinIns(m, i, j)
             s.solve(seed)
             sol = s.sol
             f = open("final_test_file.txt", "a")
