@@ -55,7 +55,7 @@ class SolverMinIns:
 
         # self.ReportSolution(self.sol)
         # SolDrawer.draw(self.sol, self.allNodes)
-        return self.sol
+
 
     def ReportSolution(self, sol):
         for i in range(0, len(sol.routes)):

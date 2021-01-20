@@ -35,13 +35,13 @@ class SolverMinIns:
                                                # see find_best_insertion_for_customer for the use
         self.siders_constant2 = siders_constant2
 
-    def solve(self, with_sort = False): # with sort variable defines if the minimum_insertions_with_opened_routes will
+    def solve(self, seed, with_sort=False): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
         self.SetRoutedFlagToFalseForAllCustomers()
         self.minimum_insertions_with_opened_routes(with_sort)
         tabu = TabuCustom(self)
-        self.sol = tabu.solveTabu()
-        return self.sol
+        self.sol = tabu.solveTabu(seed)
+
 
 
 

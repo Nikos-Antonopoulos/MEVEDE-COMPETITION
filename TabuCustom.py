@@ -982,7 +982,7 @@ class TabuCustom:
             shaking_flag = 1000
 
         while terminationCondition is False:
-            operator = random.randint(0, 2)
+            operator = random.randint(0, 4)
 
             rm.Initialize()
             sm.Initialize()
@@ -1038,7 +1038,7 @@ class TabuCustom:
 
             self.addOneToIterator()
 
-            if self.tabuIterator > 5000:
+            if self.tabuIterator > 15000:
                 terminationCondition = True
                 self.write_to_file()
         SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)

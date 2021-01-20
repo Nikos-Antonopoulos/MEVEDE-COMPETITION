@@ -1,19 +1,25 @@
-from VRPMinimumInsertions import *
-import pprint,time
+from VRPMinimumInsertions_final import *
+import time
 
 m = Model()
 m.BuildModel()
-best = 100
-start=time.time()
-for i in range(0,1):
-    s = SolverMinIns(m, 4.5, 1)
-    sol = s.solve()
-    if sol.max_cost_of_route < best:
-        best = sol.max_cost_of_route
-        best_i = i
-
-s.ReportSolution(sol)
+start = time.time()
 
 
-end=time.time()
+for i in range(8, 32):
+    for j in range(1, 8):
+        for seed in range(101, 111):
+            s = SolverMinIns(m, i/4, j/4)
+            s.solve(seed)
+            sol = s.sol
+            print("hi")
+            f = open("final_test_file.txt", "a")
+            f.write("\n" + str(sol.max_cost_of_route) + " " + str(i) + " " +str(j) + " " + str(seed))
+
+# s.ReportSolution(sol)
+print(sol.max_cost_of_route)
+
+end = time.time()
 print((end-start)/60)
+
+f.close()

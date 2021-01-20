@@ -127,8 +127,8 @@ class TabuCustom:
         self.tabuIterator = 0
 
 
-    def solveTabu(self):  # with sort variable defines if the minimum_insertions_with_opened_routes will
-        self.TabuSearch(0, True)
+    def solveTabu(self, seed):  # with sort variable defines if the minimum_insertions_with_opened_routes will
+        self.TabuSearch(seed, True)
         return self.sol
 
     def FindRouteWithMaxCost(self):  # mo
@@ -860,9 +860,9 @@ class TabuCustom:
         if nodes_serviced != len(self.customers):
             print('Number of serviced nodes problem')
 
-    def TabuSearch(self, operator, shake=False):
-        solution_cost_trajectory = []
-        random.seed(67)
+    def TabuSearch(self, seed, shake=False):
+
+        random.seed(seed)
         self.bestSolution = self.cloneSolution(self.sol)
         terminationCondition = False
 
@@ -933,7 +933,7 @@ class TabuCustom:
 
             self.addOneToIterator()
 
-            if self.tabuIterator > 5000:
+            if self.tabuIterator > 13000:
                 terminationCondition = True
                 self.write_to_file()
         # SolDrawer.draw('final_ts', self.bestSolution, self.allNodes)
