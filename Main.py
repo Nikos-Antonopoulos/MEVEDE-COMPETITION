@@ -12,7 +12,6 @@ for i in range(8, 32):
             s = SolverMinIns(m, i/4, j/4)
             s.solve(seed)
             sol = s.sol
-            print("hi")
             f = open("final_test_file.txt", "a")
             f.write("\n" + str(sol.max_cost_of_route) + " " + str(i) + " " +str(j) + " " + str(seed))
 
