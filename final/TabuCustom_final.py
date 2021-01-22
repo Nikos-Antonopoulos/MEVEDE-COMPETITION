@@ -1,5 +1,5 @@
-from VRPMinimumInsertions import *
-from SolutionDrawer import *
+from VRPMinimumInsertions_final import *
+
 import random, time
 
 
