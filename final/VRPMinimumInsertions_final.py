@@ -17,8 +17,8 @@ class CustomerInsertionAllPositions(object):
                                        # min max cost of the solution too
 
 class SolverMinIns:
-    def __init__(self, m, siders_constant, siders_constant2 = 0):
-        # m is the model, siders_constant, siders_constant2 (the second is optional) are numbers that define how
+    def __init__(self, m, positive_move_constant=3.25, negative_move_constant=0.75):
+        # m is the model, positive_move_constant, negative_move_constant (the second is optional) are numbers that define how
         # important is it for an insertion not to increase the min_max cost of the solution
         self.allNodes = m.all_nodes
         self.customers = m.service_locations
@@ -28,12 +28,12 @@ class SolverMinIns:
         self.sol = None
         self.bestSolution = None
         self.searchTrajectory = []
-        self.siders_constant = siders_constant # after some tries 5.25 had the best result
+        self.positive_move_constant = positive_move_constant # after some tries 5.25 had the best result
                                                # it is a constant that defines how strong the effect of the change
                                                # an insertion causes on the min max solution relatively to the
                                                # trialCost of the insertion (the cost on the route)
                                                # see find_best_insertion_for_customer for the use
-        self.siders_constant2 = siders_constant2
+        self.negative_move_constant = negative_move_constant
 
     def solve(self, start_time): # with sort variable defines if the minimum_insertions_with_opened_routes will
                                         # sort the self.customers
@@ -149,13 +149,13 @@ class SolverMinIns:
 
                     # if the new cost of the route (route.cost + trial.cost) is bigger than the current min max cost of
                     # the solution, then the difference between the new cost and the previous min max cost gets multiplied
-                    # with siders_constant and the result gets added to the subjective cost.
+                    # with positive_move_constant and the result gets added to the subjective cost.
                     # This is done in order to take into account if an insertion affects the min max cost of the solution
                     dist_from_max_cost = route.cost + trial_cost - self.sol.max_cost_of_route
                     if dist_from_max_cost > 0:
-                        subjective_cost_of_insertion += self.siders_constant * dist_from_max_cost
+                        subjective_cost_of_insertion += self.positive_move_constant * dist_from_max_cost
                     else:
-                        subjective_cost_of_insertion += self.siders_constant2 * dist_from_max_cost
+                        subjective_cost_of_insertion += self.negative_move_constant * dist_from_max_cost
 
                     if subjective_cost_of_insertion < best_insertion_for_customer.subjective_cost: # don't take into consideration
                                                                                       # the cases where routes contain

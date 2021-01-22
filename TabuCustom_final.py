@@ -914,7 +914,7 @@ class TabuCustom:
             # self.TestSolution()
             # solution_cost_trajectory.append(self.sol.max_cost_of_route)
 
-            # print(self.tabuIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
+            print(self.tabuIterator, self.sol.max_cost_of_route, self.bestSolution.max_cost_of_route)
 
             if self.sol.max_cost_of_route < self.bestSolution.max_cost_of_route:
                 self.bestSolution = self.cloneSolution(self.sol)
