@@ -1,5 +1,4 @@
 from VRPMinimumInsertions_final import *
-
 import random, time
 
 
